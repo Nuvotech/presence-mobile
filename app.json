@@ -22,7 +22,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.giresse.schoolClock"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -44,6 +49,12 @@
           "photosPermission": "SchoolClock needs photo library access to upload a student photo."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3f4399b9-4ae6-4c54-9181-3c5cbfbb06f1"
+      }
+    }
   }
 }
