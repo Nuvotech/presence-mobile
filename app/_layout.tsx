@@ -50,6 +50,7 @@ export default function RootLayout() {
         <View className="flex-1 bg-background">
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
             <Stack.Screen name="login" />
             <Stack.Screen name="home" />
             <Stack.Screen name="profile" />
