@@ -18,25 +18,29 @@ import {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontsError] = useFonts({
     HankenGrotesk_400Regular,
     HankenGrotesk_500Medium,
     HankenGrotesk_600SemiBold,
     HankenGrotesk_700Bold,
     HankenGrotesk_800ExtraBold,
   });
+  const ready = fontsLoaded || !!fontsError;
 
   const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
+    if (ready) {
       await SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [ready]);
 
   useEffect(() => {
-    onLayoutRootView();
-  }, [onLayoutRootView]);
+    if (fontsError) {
+      console.error('Font loading failed, continuing without custom fonts:', fontsError);
+    }
+    onLayoutRootView().catch((err) => console.error('Failed to hide splash screen:', err));
+  }, [onLayoutRootView, fontsError]);
 
-  if (!fontsLoaded) {
+  if (!ready) {
     return null;
   }
 
