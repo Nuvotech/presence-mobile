@@ -3,6 +3,7 @@
     "name": "schoolClock",
     "slug": "schoolClock",
     "version": "1.0.0",
+    "scheme": "schoolclock",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,7 +25,25 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-splash-screen",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SchoolClock needs camera access to scan student ID QR codes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SchoolClock needs photo library access to upload a student photo."
+        }
+      ]
+    ]
   }
 }
