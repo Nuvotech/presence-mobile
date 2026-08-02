@@ -62,7 +62,7 @@ export function IDCard({
     <GestureDetector gesture={panGesture}>
       <Animated.View
         style={cardAnimatedStyle}
-        className="w-[300px] h-[480px] bg-white rounded-2xl border border-surface-variant overflow-hidden">
+        className="w-[300px] min-h-[400px] bg-white rounded-2xl border border-surface-variant overflow-hidden">
         <LinearGradient
           colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.1)']}
           start={{ x: 0, y: 0 }}
@@ -71,17 +71,17 @@ export function IDCard({
           style={{ position: 'absolute', inset: 0, zIndex: 10 }}
         />
 
-        <View className="pt-sm px-sm pb-xs items-center">
-          <View className="flex-row items-center gap-1 mb-md">
-            <MaterialIcons name="watch" size={28} color={colors.primary} />
-            <AppText weight="extrabold" className="text-xl text-primary">
+        <View className="pt-xs px-sm pb-xs items-center">
+          <View className="flex-row items-center gap-1 mb-xs">
+            <MaterialIcons name="watch" size={24} color={colors.primary} />
+            <AppText weight="extrabold" className="text-lg text-primary">
               SchoolClock
             </AppText>
           </View>
         </View>
 
-        <View className="px-sm flex-row items-start gap-sm mt-xs">
-          <View className="w-28 h-28 bg-surface-container-low border border-outline-variant rounded overflow-hidden items-center justify-center">
+        <View className="px-sm flex-row items-start gap-sm">
+          <View className="w-24 h-24 bg-surface-container-low border border-outline-variant rounded overflow-hidden items-center justify-center">
             {resolvedPhotoUri ? (
               <Image source={{ uri: resolvedPhotoUri }} className="w-full h-full" />
             ) : (
@@ -104,20 +104,20 @@ export function IDCard({
                 {grade}
               </AppText>
             </View>
-            <AppText className="text-xs text-on-surface-variant mt-sm">ID: {studentId}</AppText>
+            <AppText className="text-xs text-on-surface-variant mt-xs">ID: {studentId}</AppText>
           </View>
         </View>
 
         <View className="flex-grow justify-end px-sm">
-          <View className="h-px bg-outline-variant w-full my-sm" />
+          <View className="h-px bg-outline-variant w-full my-xs" />
         </View>
 
-        <View className="px-sm pb-sm flex-row justify-between items-end">
+        <View className="px-sm pb-xs flex-row justify-between items-end">
           <AppText className="text-[10px] text-on-surface-variant leading-tight max-w-[120px]">
             Property of SchoolClock Institution.
           </AppText>
           <View className="p-1 bg-white border-2 border-primary rounded-lg">
-            <View className="w-20 h-20 bg-white flex-row flex-wrap p-1">
+            <View className="w-16 h-16 bg-white flex-row flex-wrap p-1">
               {qrGrid.flatMap((row, ri) =>
                 row.map((cell, ci) => (
                   <View
@@ -131,7 +131,7 @@ export function IDCard({
           </View>
         </View>
 
-        <View className="h-10 bg-primary items-center justify-center px-sm mt-auto">
+        <View className="h-8 bg-primary items-center justify-center px-sm mt-auto">
           <AppText className="text-[11px] text-white/90 text-center">
             Scan each morning at the door
           </AppText>

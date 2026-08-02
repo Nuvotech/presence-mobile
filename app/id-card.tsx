@@ -28,8 +28,8 @@ export default function IDCardPage() {
   return (
     <View className="flex-1 bg-background">
       <Header title="Student ID View" backButton />
-      <ScrollView contentContainerClassName="items-center py-lg px-container-margin pb-24">
-        <View className="mb-md items-center">
+      <ScrollView contentContainerClassName="items-center pt-xs pb-16 px-container-margin">
+        <View className="mb-xs items-center">
           <AppText weight="bold" className="text-2xl text-on-surface mb-1">
             Preview Student ID
           </AppText>
@@ -38,7 +38,7 @@ export default function IDCardPage() {
           </AppText>
         </View>
 
-        <View className="my-5">
+        <View className="mt-1">
           <IDCard
             name={name}
             grade={grade}
@@ -49,7 +49,7 @@ export default function IDCardPage() {
           />
         </View>
 
-        <View className="mt-lg flex-row gap-sm">
+        <View className="mt-sm flex-row gap-sm">
           <PrimaryButton label="Share ID" icon="ios-share" onPress={handleShare} className="px-6" />
           <OutlineButton label="Edit" icon="edit" className="px-6" />
         </View>
