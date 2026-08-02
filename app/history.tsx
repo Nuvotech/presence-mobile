@@ -7,6 +7,7 @@ import { colors } from '../theme/tokens';
 import { classes } from '../data/classes';
 import { useAppStore } from '../store/useAppStore';
 import { formatDisplayDate, isToday } from '../lib/date';
+import { subjectLabel } from '../data/subjects';
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -54,7 +55,8 @@ export default function HistoryPage() {
                     )}
                   </View>
                   <AppText className="text-sm text-on-surface-variant">
-                    {formatDisplayDate(session.date)} · {present}/{total} present
+                    {formatDisplayDate(session.date)} · {subjectLabel(session.subjectCode)} · {present}/{total}{' '}
+                    present
                   </AppText>
                 </View>
               </View>

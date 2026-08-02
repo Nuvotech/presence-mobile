@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -12,8 +12,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Header } from '../components/Header';
 import { AppText } from '../components/AppText';
+import { SubjectPickerModal } from '../components/SubjectPickerModal';
 import { colors } from '../theme/tokens';
-import { classes } from '../data/classes';
+import { classes, type ClassInfo } from '../data/classes';
 import { useAppStore } from '../store/useAppStore';
 
 const FRAME_SIZE = 256;
@@ -21,7 +22,12 @@ const FRAME_SIZE = 256;
 export default function ClassScannerPage() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
+  const teacher = useAppStore((s) => s.teacher);
+  const activeSubjectCode = useAppStore((s) => s.activeSubjectCode);
+  const setActiveSubject = useAppStore((s) => s.setActiveSubject);
   const checkInClass = useAppStore((s) => s.checkInClass);
+  const [pendingClass, setPendingClass] = useState<ClassInfo | null>(null);
+  const [subjectPickerVisible, setSubjectPickerVisible] = useState(false);
   const scanLineY = useSharedValue(0);
 
   const scanLineStyle = useAnimatedStyle(() => ({
@@ -36,12 +42,29 @@ export default function ClassScannerPage() {
     useCallback(() => {
       const timer = setTimeout(() => {
         const classInfo = classes[Math.floor(Math.random() * classes.length)];
-        checkInClass(classInfo);
-        router.replace('/register');
+        if (activeSubjectCode) {
+          checkInClass(classInfo, activeSubjectCode);
+          router.replace('/register');
+        } else if (teacher.subjects.length <= 1) {
+          checkInClass(classInfo, teacher.subjects[0]?.code ?? '');
+          router.replace('/register');
+        } else {
+          setPendingClass(classInfo);
+          setSubjectPickerVisible(true);
+        }
       }, 2500);
       return () => clearTimeout(timer);
-    }, [router, checkInClass])
+    }, [router, checkInClass, teacher, activeSubjectCode])
   );
+
+  const handleSelectSubject = (code: string) => {
+    setActiveSubject(code);
+    setSubjectPickerVisible(false);
+    if (pendingClass) {
+      checkInClass(pendingClass, code);
+      router.replace('/register');
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -80,6 +103,17 @@ export default function ClassScannerPage() {
           </AppText>
         </View>
       </View>
+
+      <SubjectPickerModal
+        visible={subjectPickerVisible}
+        subjects={teacher.subjects}
+        onSelect={handleSelectSubject}
+        onClose={() => {
+          setSubjectPickerVisible(false);
+          setPendingClass(null);
+          router.back();
+        }}
+      />
     </View>
   );
 }

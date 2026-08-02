@@ -10,6 +10,7 @@ import { colors } from '../theme/tokens';
 import { classes } from '../data/classes';
 import { useAppStore } from '../store/useAppStore';
 import { formatDisplayDate } from '../lib/date';
+import { subjectLabel } from '../data/subjects';
 
 type Tab = 'present' | 'absent';
 
@@ -46,7 +47,7 @@ export default function AttendanceRegister() {
       <ScrollView className="flex-1" contentContainerClassName="pb-24">
         <View className="px-container-margin pt-lg pb-sm">
           <View className="flex-row justify-between items-start mb-1">
-            <View>
+            <View className="flex-1 pr-2">
               <AppText weight="medium" className="text-on-surface-variant text-xs uppercase tracking-wider mb-1">
                 Attendance Sheet
               </AppText>
@@ -56,8 +57,14 @@ export default function AttendanceRegister() {
               <AppText className="text-base text-on-surface-variant mt-1">
                 {formatDisplayDate(session.date)}
               </AppText>
+              <View className="mt-2 self-start bg-primary px-3 py-1 rounded-[999px] flex-row items-center gap-1.5">
+                <MaterialIcons name="menu-book" size={14} color={colors.onPrimary} />
+                <AppText weight="bold" className="text-xs text-on-primary" numberOfLines={1}>
+                  {session.subjectCode} · {subjectLabel(session.subjectCode)}
+                </AppText>
+              </View>
             </View>
-            <View className="bg-primary px-3 py-1.5 rounded-[999px] flex-row items-center gap-2">
+            <View className="bg-primary px-3 py-1.5 rounded-[999px] flex-row items-center gap-2 shrink-0">
               <AppText weight="bold" className="text-on-primary">
                 {presentStudents.length}/{total}
               </AppText>

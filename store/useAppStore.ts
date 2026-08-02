@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ClassInfo } from '../data/classes';
+import { teachers, type Teacher } from '../data/teachers';
 import { todayStr } from '../lib/date';
 
 export type AttendanceRecord = { present: boolean; time?: string };
@@ -11,32 +12,42 @@ export type ClassSession = {
   classId: string;
   className: string;
   date: string;
+  subjectCode: string;
   attendance: Record<number, AttendanceRecord>;
 };
 
 type AppState = {
-  teacher: { name: string; email: string; avatarUri: string };
+  teacher: Teacher;
+  activeSubjectCode: string | null;
   sessions: ClassSession[];
   todaysSession: () => ClassSession | undefined;
-  checkInClass: (classInfo: ClassInfo) => ClassSession;
+  setTeacher: (teacherId: string) => void;
+  setActiveSubject: (code: string) => void;
+  checkInClass: (classInfo: ClassInfo, subjectCode: string) => ClassSession;
   markStudentPresent: (sessionId: string, studentId: number, time: string) => void;
 };
 
+const subjectForSingleSubjectTeacher = (teacher: Teacher) =>
+  teacher.subjects.length === 1 ? teacher.subjects[0].code : null;
+
 export const useAppStore = create<AppState>()(
-  persist<AppState, [], [], Pick<AppState, 'sessions'>>(
+  persist<AppState, [], [], Pick<AppState, 'sessions' | 'teacher' | 'activeSubjectCode'>>(
     (set, get) => ({
-      teacher: {
-        name: 'Ms. Henderson',
-        email: 'henderson@school.edu',
-        avatarUri:
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuAHsl0QC6UjlQGvDrywRyTFyp5_CRwjPYp0WvLyDy3ly6B8AiNbs73a9cEWY_pXRkBfYmAwAw6MdRN3lCITFfjVxVs-JTjw9KR293NzVJU25pGQZT_PhDtByseY9VcaYxLHxQ7NY0HoRnYshlx5dMO3pQQA6UvU1O8ZW05Pam4oKnC0kKIg1O7d7qg6WUqpES57ThV9KdIaTjEIS6BFtN6tUlb-neeL555cjLXf7bocj4a0GiR7J9Cyrg',
-      },
+      teacher: teachers[0],
+      activeSubjectCode: subjectForSingleSubjectTeacher(teachers[0]),
 
       sessions: [],
 
       todaysSession: () => get().sessions.find((s) => s.date === todayStr()),
 
-      checkInClass: (classInfo) => {
+      setTeacher: (teacherId) => {
+        const teacher = teachers.find((t) => t.id === teacherId) ?? teachers[0];
+        set({ teacher, activeSubjectCode: subjectForSingleSubjectTeacher(teacher) });
+      },
+
+      setActiveSubject: (code) => set({ activeSubjectCode: code }),
+
+      checkInClass: (classInfo, subjectCode) => {
         const today = todayStr();
         const existingToday = get().sessions.find((s) => s.date === today);
         if (existingToday) return existingToday;
@@ -46,6 +57,7 @@ export const useAppStore = create<AppState>()(
           classId: classInfo.id,
           className: classInfo.name,
           date: today,
+          subjectCode,
           attendance: {},
         };
         set((state) => ({ sessions: [...state.sessions, session] }));
@@ -65,7 +77,11 @@ export const useAppStore = create<AppState>()(
     {
       name: 'schoolclock-sessions',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ sessions: state.sessions }),
+      partialize: (state) => ({
+        sessions: state.sessions,
+        teacher: state.teacher,
+        activeSubjectCode: state.activeSubjectCode,
+      }),
     }
   )
 );

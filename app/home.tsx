@@ -1,21 +1,59 @@
-import { View, Image, Pressable, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Image, Pressable, ScrollView, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Header } from '../components/Header';
 import { AppText } from '../components/AppText';
 import { PrimaryButton, OutlineButton } from '../components/Buttons';
+import { SubjectPickerModal } from '../components/SubjectPickerModal';
 import { colors } from '../theme/tokens';
 import { useAppStore } from '../store/useAppStore';
 import { formatDisplayDate } from '../lib/date';
+import { classes, type ClassInfo } from '../data/classes';
+import { subjectLabel } from '../data/subjects';
 
 export default function HomePage() {
   const router = useRouter();
   const teacher = useAppStore((s) => s.teacher);
   const todaysSession = useAppStore((s) => s.todaysSession());
+  const checkInClass = useAppStore((s) => s.checkInClass);
+  const activeSubjectCode = useAppStore((s) => s.activeSubjectCode);
+  const setActiveSubject = useAppStore((s) => s.setActiveSubject);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [subjectPickerVisible, setSubjectPickerVisible] = useState(false);
+  const [pendingClass, setPendingClass] = useState<ClassInfo | null>(null);
 
   const presentCount = todaysSession
     ? Object.values(todaysSession.attendance).filter((a) => a.present).length
     : 0;
+
+  const finishCheckIn = (classInfo: ClassInfo, subjectCode: string) => {
+    checkInClass(classInfo, subjectCode);
+    router.push('/register');
+  };
+
+  const handleSelectClass = (classInfo: ClassInfo) => {
+    setPickerVisible(false);
+    if (activeSubjectCode) {
+      finishCheckIn(classInfo, activeSubjectCode);
+      return;
+    }
+    if (teacher.subjects.length <= 1) {
+      finishCheckIn(classInfo, teacher.subjects[0]?.code ?? '');
+      return;
+    }
+    setPendingClass(classInfo);
+    setSubjectPickerVisible(true);
+  };
+
+  const handleSelectSubject = (code: string) => {
+    setActiveSubject(code);
+    setSubjectPickerVisible(false);
+    if (pendingClass) {
+      finishCheckIn(pendingClass, code);
+      setPendingClass(null);
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -49,7 +87,8 @@ export default function HomePage() {
                   Today: {todaysSession.className}
                 </AppText>
                 <AppText className="text-sm text-on-surface-variant">
-                  {formatDisplayDate(todaysSession.date)} · {presentCount} present
+                  {formatDisplayDate(todaysSession.date)} · {subjectLabel(todaysSession.subjectCode)} ·{' '}
+                  {presentCount} present
                 </AppText>
               </View>
             </View>
@@ -64,11 +103,20 @@ export default function HomePage() {
         )}
 
         <View className="mt-lg gap-sm">
-          <PrimaryButton
-            label="Scan a Class"
-            icon="qr-code-scanner"
-            onPress={() => router.push('/class-scanner')}
-          />
+          <View className="flex-row gap-sm">
+            <PrimaryButton
+              label="Scan a Class"
+              icon="qr-code-scanner"
+              onPress={() => router.push('/class-scanner')}
+              className="flex-1"
+            />
+            <OutlineButton
+              label="Select a Class"
+              icon="list"
+              onPress={() => setPickerVisible(true)}
+              className="flex-1"
+            />
+          </View>
           <OutlineButton label="History" icon="history" onPress={() => router.push('/history')} />
         </View>
 
@@ -78,6 +126,50 @@ export default function HomePage() {
           </AppText>
         </Pressable>
       </ScrollView>
+
+      <Modal
+        visible={pickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerVisible(false)}>
+        <Pressable
+          className="flex-1 bg-black/40 justify-end"
+          onPress={() => setPickerVisible(false)}>
+          <Pressable
+            className="bg-surface-container-lowest rounded-t-xl px-container-margin pt-lg pb-8"
+            onPress={(e) => e.stopPropagation()}>
+            <AppText weight="bold" className="text-lg text-on-surface mb-md">
+              Select a Class
+            </AppText>
+            {classes.map((classInfo) => (
+              <Pressable
+                key={classInfo.id}
+                onPress={() => handleSelectClass(classInfo)}
+                className="flex-row items-center justify-between py-3 border-b border-outline-variant active:opacity-70">
+                <View>
+                  <AppText weight="medium" className="text-base text-on-surface">
+                    {classInfo.name}
+                  </AppText>
+                  <AppText className="text-sm text-on-surface-variant">
+                    {classInfo.roster.length} students
+                  </AppText>
+                </View>
+                <MaterialIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
+              </Pressable>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <SubjectPickerModal
+        visible={subjectPickerVisible}
+        subjects={teacher.subjects}
+        onSelect={handleSelectSubject}
+        onClose={() => {
+          setSubjectPickerVisible(false);
+          setPendingClass(null);
+        }}
+      />
     </View>
   );
 }

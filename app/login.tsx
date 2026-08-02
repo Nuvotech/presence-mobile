@@ -8,9 +8,13 @@ import { AppText } from '../components/AppText';
 import { TextField } from '../components/TextField';
 import { colors } from '../theme/tokens';
 import { logoUri } from '../data/students';
+import { teachers } from '../data/teachers';
+import { useAppStore } from '../store/useAppStore';
 
 export default function LoginPage() {
   const router = useRouter();
+  const setTeacher = useAppStore((s) => s.setTeacher);
+  const [email, setEmail] = useState(teachers[0].email);
   const [isLoading, setIsLoading] = useState(false);
   const spin = useSharedValue(0);
 
@@ -21,6 +25,9 @@ export default function LoginPage() {
   const handleLogin = () => {
     setIsLoading(true);
     spin.value = withRepeat(withTiming(360, { duration: 800, easing: Easing.linear }), -1);
+    const matchedTeacher =
+      teachers.find((t) => t.email.toLowerCase() === email.trim().toLowerCase()) ?? teachers[0];
+    setTeacher(matchedTeacher.id);
     setTimeout(() => router.replace('/home'), 1000);
   };
 
@@ -42,8 +49,9 @@ export default function LoginPage() {
             <TextField
               label="Teacher Email"
               icon="mail"
-              placeholder="name@school.edu"
-              defaultValue="henderson@school.edu"
+              placeholder="name@school.cd"
+              value={email}
+              onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
             />

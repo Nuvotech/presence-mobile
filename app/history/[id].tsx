@@ -8,6 +8,7 @@ import { colors } from '../../theme/tokens';
 import { classes } from '../../data/classes';
 import { useAppStore } from '../../store/useAppStore';
 import { formatDisplayDate } from '../../lib/date';
+import { subjectLabel } from '../../data/subjects';
 
 export default function HistorySessionDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,6 +40,7 @@ export default function HistorySessionDetail() {
           <AppText weight="bold" className="text-2xl text-on-surface">
             {classInfo.name}
           </AppText>
+          <AppText className="text-sm text-on-surface-variant mt-1">{subjectLabel(session.subjectCode)}</AppText>
           <View className="mt-2 self-start bg-surface-container px-3 py-1.5 rounded-[999px] flex-row items-center gap-2">
             <MaterialIcons name="check-circle" size={16} color={colors.onSurfaceVariant} />
             <AppText weight="bold" className="text-sm text-on-surface">
