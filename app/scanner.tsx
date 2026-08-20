@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
@@ -13,21 +13,29 @@ import Animated, {
 import { Header } from '../components/Header';
 import { AppText } from '../components/AppText';
 import { colors } from '../theme/tokens';
-import { classes } from '../data/classes';
 import { useAppStore } from '../store/useAppStore';
+import { scanStudent } from '../lib/sessions';
 
 const FRAME_SIZE = 256;
+
+const formatTime = (iso: string | null) =>
+  new Date(iso ?? Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
 export default function ScannerPage() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
-  const session = useAppStore((s) => s.todaysSession());
+  const session = useAppStore((s) => s.activeSession());
   const markStudentPresent = useAppStore((s) => s.markStudentPresent);
+  const ensureSessionOpen = useAppStore((s) => s.ensureSessionOpen);
+  const classes = useAppStore((s) => s.classes);
+  const studentsByClass = useAppStore((s) => s.studentsByClass);
   const scanLineY = useSharedValue(0);
+  const busyRef = useRef(false);
 
   const classInfo = session ? classes.find((c) => c.id === session.classId) : undefined;
+  const roster = session ? (studentsByClass[session.classId] ?? []) : [];
   const presentCount = session ? Object.values(session.attendance).filter((a) => a.present).length : 0;
-  const total = classInfo?.roster.length ?? 0;
+  const total = roster.length;
 
   const scanLineStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: scanLineY.value }],
@@ -37,43 +45,73 @@ export default function ScannerPage() {
     scanLineY.value = withRepeat(withTiming(FRAME_SIZE, { duration: 2000, easing: Easing.linear }), -1, false);
   }, [scanLineY]);
 
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
+
   useFocusEffect(
     useCallback(() => {
-      if (!session || !classInfo) return;
-      const timer = setTimeout(() => {
-        if (Math.random() < 0.15) {
+      busyRef.current = false;
+      return () => {
+        busyRef.current = true;
+      };
+    }, [])
+  );
+
+  const handleBarcodeScanned = useCallback(
+    async ({ data }: BarcodeScanningResult) => {
+      if (busyRef.current || !session) return;
+      busyRef.current = true;
+
+      try {
+        const remoteId = await ensureSessionOpen(session.id);
+        if (remoteId === null) {
           router.push('/scan-result/error');
           return;
         }
 
-        const student = classInfo.roster[Math.floor(Math.random() * classInfo.roster.length)];
-        const record = session.attendance[student.id];
+        const result = await scanStudent(remoteId, data);
 
-        if (record?.present) {
+        if (result.status === 'not_found' || !result.student) {
+          router.push('/scan-result/error');
+          return;
+        }
+
+        const time = formatTime(result.record?.arrived_at ?? null);
+
+        if (result.status === 'duplicate') {
           router.push({
             pathname: '/scan-result/duplicate',
-            params: { name: student.name, grade: classInfo.name, time: record.time ?? '' },
+            params: { name: result.student.name, time },
           });
           return;
         }
 
-        const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        markStudentPresent(session.id, student.id, time);
+        markStudentPresent(session.id, result.student.id, time);
         router.push({
           pathname: '/scan-result/success',
-          params: { name: student.name, grade: classInfo.name, time },
+          params: { name: result.student.name, grade: classInfo?.name ?? '', time },
         });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }, [router, session, classInfo, markStudentPresent])
+      } catch {
+        router.push('/scan-result/error');
+      }
+    },
+    [session, classInfo, ensureSessionOpen, markStudentPresent, router]
   );
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Scan Student" backButton />
+      <Header title="Scanner un élève" backButton />
       <View className="flex-1 bg-black items-center justify-center relative overflow-hidden">
         {permission?.granted ? (
-          <CameraView style={{ position: 'absolute', inset: 0 }} facing="back" />
+          <CameraView
+            style={{ position: 'absolute', inset: 0 }}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+            onBarcodeScanned={handleBarcodeScanned}
+          />
         ) : (
           <View className="absolute inset-0 bg-[#0a0a0a] items-center justify-center opacity-60">
             <MaterialIcons name="qr-code-scanner" size={140} color={colors.surfaceVariant} />
@@ -81,11 +119,17 @@ export default function ScannerPage() {
         )}
 
         {!permission?.granted && (
-          <Pressable
-            onPress={requestPermission}
-            className="absolute top-6 self-center bg-white/10 px-4 py-2 rounded-full">
-            <AppText className="text-white text-sm">Tap to enable camera access</AppText>
-          </Pressable>
+          <View className="absolute inset-0 items-center justify-center px-container-margin" pointerEvents="box-none">
+            <Pressable
+              onPress={requestPermission}
+              className="bg-white/10 px-4 py-3 rounded-xl">
+              <AppText className="text-white text-sm text-center">
+                {permission && !permission.canAskAgain
+                  ? "Accès à la caméra refusé. Activez-le dans les réglages de l'appareil pour scanner."
+                  : "Appuyez pour activer l'accès à la caméra"}
+              </AppText>
+            </Pressable>
+          </View>
         )}
 
         <View className="w-64 h-64 relative z-10 rounded-lg overflow-hidden" style={{ borderWidth: 2, borderColor: 'white' }}>
@@ -101,7 +145,7 @@ export default function ScannerPage() {
 
         <View className="absolute bottom-12 self-center z-20 px-container-margin">
           <AppText weight="medium" className="text-sm text-white bg-black/40 py-2 px-4 rounded-full overflow-hidden">
-            Align QR code within the frame
+            Alignez le code QR dans le cadre
           </AppText>
         </View>
       </View>
@@ -114,13 +158,13 @@ export default function ScannerPage() {
             </View>
             <View>
               <AppText weight="bold" className="text-primary">
-                {presentCount} students
+                {presentCount} élèves
               </AppText>
-              <AppText className="text-sm text-on-surface-variant">Scanned today</AppText>
+              <AppText className="text-sm text-on-surface-variant">Scannés aujourd'hui</AppText>
             </View>
           </View>
           <View className="items-end">
-            <AppText className="text-sm text-on-primary-container">Target: {total}</AppText>
+            <AppText className="text-sm text-on-primary-container">Objectif : {total}</AppText>
             <View className="w-24 h-2 bg-surface-container-high rounded-full mt-2 overflow-hidden">
               <View
                 className="h-full bg-primary"
@@ -134,7 +178,7 @@ export default function ScannerPage() {
           className="w-full bg-primary h-12 rounded-xl flex-row items-center justify-center gap-2 active:opacity-90">
           <MaterialIcons name="list-alt" size={20} color={colors.onPrimary} />
           <AppText weight="bold" className="text-on-primary">
-            View Register
+            Voir le registre
           </AppText>
         </Pressable>
       </View>

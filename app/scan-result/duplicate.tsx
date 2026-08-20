@@ -33,7 +33,7 @@ export default function DuplicateWarning() {
         <View className="flex-row items-center gap-2">
           <MaterialIcons name="qr-code-scanner" size={20} color="#ffffff" />
           <AppText weight="bold" className="text-xl text-white">
-            Duplicate Scan
+            Scan en double
           </AppText>
         </View>
         <View className="w-10" />
@@ -47,15 +47,15 @@ export default function DuplicateWarning() {
           {name}
         </AppText>
         <AppText className="text-lg text-white/90 text-center max-w-[280px]">
-          Already marked present at {time}.
+          Déjà marqué présent à {time}.
         </AppText>
 
         <View className="mt-8 bg-white/10 border border-white/20 p-sm rounded-xl w-full">
           <View className="flex-row items-center justify-between">
             <View>
-              <AppText className="text-[10px] uppercase tracking-wider text-white/70">Record Status</AppText>
+              <AppText className="text-[10px] uppercase tracking-wider text-white/70">Statut de l'enregistrement</AppText>
               <AppText weight="bold" className="text-lg text-white">
-                DUPLICATE
+                DOUBLON
               </AppText>
             </View>
             <View className="h-10 w-10 items-center justify-center bg-white rounded-[999px]">
@@ -71,7 +71,7 @@ export default function DuplicateWarning() {
           className="w-full h-14 bg-white rounded-xl flex-row items-center justify-center gap-2 active:opacity-90">
           <MaterialIcons name="qr-code-scanner" size={20} color={colors.warning} />
           <AppText weight="bold" className="text-warning">
-            SCAN NEXT
+            SCANNER SUIVANT
           </AppText>
         </Pressable>
         <Pressable
@@ -79,7 +79,7 @@ export default function DuplicateWarning() {
           className="w-full h-14 border-2 border-white/40 rounded-xl flex-row items-center justify-center gap-2 active:bg-white/10">
           <MaterialIcons name="edit" size={20} color="#ffffff" />
           <AppText weight="bold" className="text-white">
-            OVERRIDE
+            FORCER
           </AppText>
         </Pressable>
       </View>

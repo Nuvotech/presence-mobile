@@ -42,7 +42,7 @@ export default function RegisterStudent() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Register Student" backButton />
+      <Header title="Inscrire un élève" backButton />
       <ScrollView contentContainerClassName="px-container-margin pt-md pb-32" keyboardShouldPersistTaps="handled">
         <View className="items-center justify-center py-sm">
           <View className="relative">
@@ -54,7 +54,7 @@ export default function RegisterStudent() {
               ) : (
                 <>
                   <MaterialIcons name="add-a-photo" size={32} color={colors.outline} />
-                  <AppText className="text-xs text-on-surface-variant mt-1">Upload Photo</AppText>
+                  <AppText className="text-xs text-on-surface-variant mt-1">Ajouter une photo</AppText>
                 </>
               )}
             </Pressable>
@@ -68,15 +68,15 @@ export default function RegisterStudent() {
 
         <View className="gap-md">
           <TextField
-            label="Full Name"
-            placeholder="e.g. Julian Anderson"
+            label="Nom complet"
+            placeholder="ex. Julian Anderson"
             value={fullName}
             onChangeText={setFullName}
           />
 
           <View className="gap-1">
             <AppText weight="medium" className="text-sm text-on-surface-variant">
-              Class / Grade
+              Classe
             </AppText>
             <View className="rounded-xl border border-outline-variant bg-surface-container-lowest overflow-hidden">
               <Picker selectedValue={grade} onValueChange={setGrade}>
@@ -89,12 +89,12 @@ export default function RegisterStudent() {
 
           <View className="h-px bg-outline-variant my-1" />
           <AppText weight="bold" className="text-sm text-primary tracking-widest uppercase py-2">
-            Guardian Contact
+            Contact du tuteur
           </AppText>
 
           <View className="gap-1">
             <AppText weight="medium" className="text-sm text-on-surface-variant">
-              Parent WhatsApp Number
+              Numéro WhatsApp du parent
             </AppText>
             <View className="flex-row gap-2">
               <View className="w-24 rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden">
@@ -120,7 +120,7 @@ export default function RegisterStudent() {
       <View
         className="absolute bottom-0 left-0 right-0 bg-surface/95 p-container-margin border-t border-outline-variant"
         style={{ paddingBottom: insets.bottom + 16 }}>
-        <PrimaryButton label="Save Student Record" icon="check-circle" iconPosition="right" onPress={handleSave} />
+        <PrimaryButton label="Enregistrer l'élève" icon="check-circle" iconPosition="right" onPress={handleSave} />
       </View>
     </View>
   );

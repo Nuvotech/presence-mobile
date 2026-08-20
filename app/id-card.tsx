@@ -1,40 +1,41 @@
-import { View, ScrollView, Share } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Header } from '../components/Header';
-import { AppText } from '../components/AppText';
-import { IDCard } from '../components/IDCard';
-import { PrimaryButton, OutlineButton } from '../components/Buttons';
+import { View, ScrollView, Share } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Header } from "../components/Header";
+import { AppText } from "../components/AppText";
+import { IDCard } from "../components/IDCard";
+import { PrimaryButton, OutlineButton } from "../components/Buttons";
 
 export default function IDCardPage() {
   const params = useLocalSearchParams<{
     name?: string;
     grade?: string;
     studentId?: string;
+    qrToken?: string;
     img?: string;
     initials?: string;
     color?: string;
   }>();
 
-  const name = params.name ?? 'Thabo Mokoena';
-  const grade = params.grade ?? 'Grade 5B';
-  const studentId = params.studentId ?? 'SC-2024-8841';
+  const name = params.name ?? "Thabo Mokoena";
+  const grade = params.grade ?? "Grade 5B";
+  const studentId = params.studentId ?? "SC-2024-8841";
 
   const handleShare = () => {
     Share.share({
-      message: `${name} — ${grade} — Student ID: ${studentId} — SchoolClock`,
+      message: `${name} — ${grade} — ID Élève : ${studentId} — Present`,
     });
   };
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Student ID View" backButton />
+      <Header title="Carte d'élève" backButton />
       <ScrollView contentContainerClassName="items-center pt-xs pb-16 px-container-margin">
         <View className="mb-xs items-center">
           <AppText weight="bold" className="text-2xl text-on-surface mb-1">
-            Preview Student ID
+            Aperçu de la carte d'élève
           </AppText>
           <AppText className="text-base text-on-surface-variant text-center max-w-[280px]">
-            Ensure the QR code is clearly visible for daily scanning.
+            Assurez-vous que le code QR est bien visible pour le scan quotidien.
           </AppText>
         </View>
 
@@ -43,6 +44,7 @@ export default function IDCardPage() {
             name={name}
             grade={grade}
             studentId={studentId}
+            qrToken={params.qrToken}
             photoUri={params.img}
             initials={params.initials}
             color={params.color}
@@ -50,8 +52,13 @@ export default function IDCardPage() {
         </View>
 
         <View className="mt-sm flex-row gap-sm">
-          <PrimaryButton label="Share ID" icon="ios-share" onPress={handleShare} className="px-6" />
-          <OutlineButton label="Edit" icon="edit" className="px-6" />
+          <PrimaryButton
+            label="Partager la carte"
+            icon="ios-share"
+            onPress={handleShare}
+            className="px-6"
+          />
+          <OutlineButton label="Modifier" icon="edit" className="px-6" />
         </View>
       </ScrollView>
     </View>

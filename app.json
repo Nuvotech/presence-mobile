@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "schoolClock",
-    "slug": "schoolClock",
+    "name": "Present",
+    "slug": "present",
     "version": "1.0.0",
-    "scheme": "schoolclock",
+    "scheme": "Present",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.giresse.schoolClock"
+      "package": "com.giresse.Present"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -42,21 +42,23 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "SchoolClock needs camera access to scan student ID QR codes."
+          "cameraPermission": "Present needs camera access to scan student ID QR codes."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "SchoolClock needs photo library access to upload a student photo."
+          "photosPermission": "Present needs photo library access to upload a student photo."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "3f4399b9-4ae6-4c54-9181-3c5cbfbb06f1"
+        "projectId": "c5cfb85a-29c9-42a8-ba2b-2ad90dd76e6e"
       }
-    }
+    },
+    "owner": "giresse"
   }
 }

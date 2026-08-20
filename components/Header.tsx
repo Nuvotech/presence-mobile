@@ -5,16 +5,18 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { useAppStore } from '../store/useAppStore';
 import { colors } from '../theme/tokens';
+import { avatarUriFor } from '../lib/avatar';
 
 type HeaderProps = {
   title?: string;
   backButton?: boolean;
 };
 
-export function Header({ title = 'Attendance Portal', backButton = false }: HeaderProps) {
+export function Header({ title = 'Portail de Présence', backButton = false }: HeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const avatarUri = useAppStore((s) => s.teacher.avatarUri);
+  const authUser = useAppStore((s) => s.authUser);
+  const avatarUri = avatarUriFor(authUser?.name ?? '');
   return (
     <View className="w-full bg-surface border-b border-outline-variant" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center justify-between px-container-margin h-16">

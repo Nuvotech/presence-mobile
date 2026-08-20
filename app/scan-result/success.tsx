@@ -62,7 +62,7 @@ export default function SuccessFeedback() {
         <View className="flex-row items-center gap-2 bg-white/10 px-sm py-xs rounded-full border border-white/20">
           <MaterialIcons name="notifications-active" size={16} color="#ffffff" />
           <AppText weight="medium" className="text-xs uppercase tracking-widest text-white">
-            Parent notified.
+            Parent averti.
           </AppText>
         </View>
       </Animated.View>

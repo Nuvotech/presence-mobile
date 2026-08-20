@@ -19,10 +19,10 @@ export function SubjectPickerModal({ visible, subjects, onSelect, onClose }: Sub
           className="bg-surface-container-lowest rounded-t-xl px-container-margin pt-lg pb-8"
           onPress={(e) => e.stopPropagation()}>
           <AppText weight="bold" className="text-lg text-on-surface mb-1">
-            Select Subject
+            Sélectionner une matière
           </AppText>
           <AppText className="text-sm text-on-surface-variant mb-md">
-            This subject will apply to every class you check in today.
+            Cette matière s'appliquera à toutes les classes enregistrées aujourd'hui.
           </AppText>
           {subjects.map((subject) => (
             <Pressable

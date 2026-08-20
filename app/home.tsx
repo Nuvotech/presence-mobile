@@ -1,35 +1,56 @@
-import { useState } from 'react';
-import { View, Image, Pressable, ScrollView, Modal } from 'react-native';
-import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Header } from '../components/Header';
-import { AppText } from '../components/AppText';
-import { PrimaryButton, OutlineButton } from '../components/Buttons';
-import { SubjectPickerModal } from '../components/SubjectPickerModal';
-import { colors } from '../theme/tokens';
-import { useAppStore } from '../store/useAppStore';
-import { formatDisplayDate } from '../lib/date';
-import { classes, type ClassInfo } from '../data/classes';
-import { subjectLabel } from '../data/subjects';
+import { useEffect, useMemo, useState } from "react";
+import {
+  View,
+  Image,
+  Pressable,
+  ScrollView,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Header } from "../components/Header";
+import { AppText } from "../components/AppText";
+import { PrimaryButton, OutlineButton } from "../components/Buttons";
+import { SubjectPickerModal } from "../components/SubjectPickerModal";
+import { colors } from "../theme/tokens";
+import { useAppStore } from "../store/useAppStore";
+import { avatarUriFor } from "../lib/avatar";
+import { todayStr } from "../lib/date";
+import type { ClassInfo } from "../data/classes";
 
 export default function HomePage() {
   const router = useRouter();
-  const teacher = useAppStore((s) => s.teacher);
-  const todaysSession = useAppStore((s) => s.todaysSession());
+  const authUser = useAppStore((s) => s.authUser);
+  const sessions = useAppStore((s) => s.sessions);
+  const todaysSessions = useMemo(
+    () => sessions.filter((s) => s.date === todayStr()),
+    [sessions],
+  );
   const checkInClass = useAppStore((s) => s.checkInClass);
+  const setActiveSession = useAppStore((s) => s.setActiveSession);
+  const logout = useAppStore((s) => s.logout);
   const activeSubjectCode = useAppStore((s) => s.activeSubjectCode);
   const setActiveSubject = useAppStore((s) => s.setActiveSubject);
+  const classes = useAppStore((s) => s.classes);
+  const classesLoading = useAppStore((s) => s.classesLoading);
+  const fetchClasses = useAppStore((s) => s.fetchClasses);
+  const fetchStudentsForClass = useAppStore((s) => s.fetchStudentsForClass);
+  const subjects = useAppStore((s) => s.subjects);
+  const fetchSubjects = useAppStore((s) => s.fetchSubjects);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [subjectPickerVisible, setSubjectPickerVisible] = useState(false);
   const [pendingClass, setPendingClass] = useState<ClassInfo | null>(null);
 
-  const presentCount = todaysSession
-    ? Object.values(todaysSession.attendance).filter((a) => a.present).length
-    : 0;
+  useEffect(() => {
+    fetchClasses();
+    fetchSubjects();
+  }, [fetchClasses, fetchSubjects]);
 
   const finishCheckIn = (classInfo: ClassInfo, subjectCode: string) => {
     checkInClass(classInfo, subjectCode);
-    router.push('/register');
+    fetchStudentsForClass(classInfo.id);
+    router.push("/register");
   };
 
   const handleSelectClass = (classInfo: ClassInfo) => {
@@ -38,8 +59,8 @@ export default function HomePage() {
       finishCheckIn(classInfo, activeSubjectCode);
       return;
     }
-    if (teacher.subjects.length <= 1) {
-      finishCheckIn(classInfo, teacher.subjects[0]?.code ?? '');
+    if (subjects.length <= 1) {
+      finishCheckIn(classInfo, subjects[0]?.code ?? "");
       return;
     }
     setPendingClass(classInfo);
@@ -57,47 +78,89 @@ export default function HomePage() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Home" />
-      <ScrollView contentContainerClassName="px-container-margin pt-lg pb-24" keyboardShouldPersistTaps="handled">
+      <Header title="Accueil" />
+      <ScrollView
+        contentContainerClassName="px-container-margin pt-lg pb-24"
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg items-center custom-shadow">
           <View className="w-24 h-24 rounded-[999px] overflow-hidden border border-outline-variant bg-surface-container mb-sm">
-            <Image source={{ uri: teacher.avatarUri }} className="w-full h-full" />
+            <Image
+              source={{ uri: avatarUriFor(authUser?.name ?? "") }}
+              className="w-full h-full"
+            />
           </View>
           <AppText weight="bold" className="text-2xl text-on-surface">
-            {teacher.name}
+            {authUser?.name}
           </AppText>
-          <AppText className="text-sm text-on-surface-variant mt-1">{teacher.email}</AppText>
+          <AppText className="text-sm text-on-surface-variant mt-1">
+            {authUser?.email}
+          </AppText>
           <View className="mt-2 px-2 py-0.5 bg-secondary-container rounded self-center">
-            <AppText weight="bold" className="text-xs text-on-secondary-container">
-              Teacher
+            <AppText
+              weight="bold"
+              className="text-xs text-on-secondary-container"
+            >
+              {authUser?.role === "admin" ? "Administrateur" : "Enseignant"}
             </AppText>
           </View>
         </View>
 
-        {todaysSession ? (
-          <Pressable
-            onPress={() => router.push('/register')}
-            className="mt-md bg-surface-container-lowest border border-outline-variant rounded-xl p-sm flex-row items-center justify-between active:opacity-80">
-            <View className="flex-row items-center gap-sm flex-1">
-              <View className="w-12 h-12 rounded-[999px] bg-secondary-container items-center justify-center">
-                <MaterialIcons name="assignment" size={22} color={colors.onSecondaryContainer} />
-              </View>
-              <View className="flex-1">
-                <AppText weight="bold" className="text-on-surface">
-                  Today: {todaysSession.className}
-                </AppText>
-                <AppText className="text-sm text-on-surface-variant">
-                  {formatDisplayDate(todaysSession.date)} · {subjectLabel(todaysSession.subjectCode)} ·{' '}
-                  {presentCount} present
-                </AppText>
-              </View>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
-          </Pressable>
+        {todaysSessions.length > 0 ? (
+          <View className="mt-md gap-sm">
+            <AppText
+              weight="medium"
+              className="text-on-surface-variant text-xs uppercase tracking-wider"
+            >
+              Aujourd'hui
+            </AppText>
+            {todaysSessions.map((session) => {
+              const presentCount = Object.values(session.attendance).filter(
+                (a) => a.present,
+              ).length;
+              return (
+                <Pressable
+                  key={session.id}
+                  onPress={() => {
+                    setActiveSession(session.id);
+                    router.push("/register");
+                  }}
+                  className="bg-surface-container-lowest border border-outline-variant rounded-xl p-sm flex-row items-center justify-between active:opacity-80"
+                >
+                  <View className="flex-row items-center gap-sm flex-1">
+                    <View className="w-12 h-12 rounded-[999px] bg-secondary-container items-center justify-center">
+                      <MaterialIcons
+                        name="assignment"
+                        size={22}
+                        color={colors.onSecondaryContainer}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <AppText weight="bold" className="text-on-surface">
+                        {session.className}
+                      </AppText>
+                      <AppText className="text-sm text-on-surface-variant">
+                        {subjects.find(
+                          (sub) => sub.code === session.subjectCode,
+                        )?.label ?? session.subjectCode}{" "}
+                        · {presentCount} présents
+                      </AppText>
+                    </View>
+                  </View>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    color={colors.onSurfaceVariant}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
         ) : (
           <View className="mt-md bg-surface-container rounded-xl p-sm">
             <AppText className="text-sm text-on-surface-variant text-center">
-              No class checked in yet today. Scan a class to get started.
+              Aucune classe enregistrée aujourd'hui. Scannez une classe pour
+              commencer.
             </AppText>
           </View>
         )}
@@ -105,24 +168,37 @@ export default function HomePage() {
         <View className="mt-lg gap-sm">
           <View className="flex-row gap-sm">
             <PrimaryButton
-              label="Scan a Class"
+              label="Scanner une classe"
               icon="qr-code-scanner"
-              onPress={() => router.push('/class-scanner')}
+              onPress={() => router.push("/class-scanner")}
               className="flex-1"
             />
             <OutlineButton
-              label="Select a Class"
+              label="Choisir une classe"
               icon="list"
               onPress={() => setPickerVisible(true)}
               className="flex-1"
             />
           </View>
-          <OutlineButton label="History" icon="history" onPress={() => router.push('/history')} />
+          <OutlineButton
+            label="Historique"
+            icon="history"
+            onPress={() => router.push("/history")}
+          />
         </View>
 
-        <Pressable onPress={() => router.replace('/login')} className="mt-lg self-center">
-          <AppText weight="medium" className="text-sm text-on-surface-variant underline">
-            Log out
+        <Pressable
+          onPress={() => {
+            logout();
+            router.replace("/login");
+          }}
+          className="mt-lg self-center"
+        >
+          <AppText
+            weight="medium"
+            className="text-sm text-on-surface-variant underline"
+          >
+            Déconnexion
           </AppText>
         </Pressable>
       </ScrollView>
@@ -131,30 +207,41 @@ export default function HomePage() {
         visible={pickerVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPickerVisible(false)}>
+        onRequestClose={() => setPickerVisible(false)}
+      >
         <Pressable
           className="flex-1 bg-black/40 justify-end"
-          onPress={() => setPickerVisible(false)}>
+          onPress={() => setPickerVisible(false)}
+        >
           <Pressable
             className="bg-surface-container-lowest rounded-t-xl px-container-margin pt-lg pb-8"
-            onPress={(e) => e.stopPropagation()}>
+            onPress={(e) => e.stopPropagation()}
+          >
             <AppText weight="bold" className="text-lg text-on-surface mb-md">
-              Select a Class
+              Sélectionner une classe
             </AppText>
+            {classesLoading && (
+              <ActivityIndicator color={colors.primary} className="my-md" />
+            )}
+            {!classesLoading && classes.length === 0 && (
+              <AppText className="text-sm text-on-surface-variant text-center my-md">
+                Aucune classe disponible.
+              </AppText>
+            )}
             {classes.map((classInfo) => (
               <Pressable
                 key={classInfo.id}
                 onPress={() => handleSelectClass(classInfo)}
-                className="flex-row items-center justify-between py-3 border-b border-outline-variant active:opacity-70">
-                <View>
-                  <AppText weight="medium" className="text-base text-on-surface">
-                    {classInfo.name}
-                  </AppText>
-                  <AppText className="text-sm text-on-surface-variant">
-                    {classInfo.roster.length} students
-                  </AppText>
-                </View>
-                <MaterialIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
+                className="flex-row items-center justify-between py-3 border-b border-outline-variant active:opacity-70"
+              >
+                <AppText weight="medium" className="text-base text-on-surface">
+                  {classInfo.name}
+                </AppText>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={22}
+                  color={colors.onSurfaceVariant}
+                />
               </Pressable>
             ))}
           </Pressable>
@@ -163,7 +250,7 @@ export default function HomePage() {
 
       <SubjectPickerModal
         visible={subjectPickerVisible}
-        subjects={teacher.subjects}
+        subjects={subjects}
         onSelect={handleSelectSubject}
         onClose={() => {
           setSubjectPickerVisible(false);

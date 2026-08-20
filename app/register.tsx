@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Pressable, TextInput, ScrollView } from "react-native";
+import { View, Pressable, TextInput, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Header } from "../components/Header";
@@ -10,27 +10,33 @@ import {
 } from "../components/StudentListItem";
 import { PrimaryButton } from "../components/Buttons";
 import { colors } from "../theme/tokens";
-import { classes } from "../data/classes";
 import { useAppStore } from "../store/useAppStore";
 import { formatDisplayDate } from "../lib/date";
-import { subjectLabel } from "../data/subjects";
 
 type Tab = "present" | "absent";
 
 export default function AttendanceRegister() {
   const [tab, setTab] = useState<Tab>("present");
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
-  const session = useAppStore((s) => s.todaysSession());
+  const session = useAppStore((s) => s.activeSession());
   const markStudentPresent = useAppStore((s) => s.markStudentPresent);
+  const markStudentAbsent = useAppStore((s) => s.markStudentAbsent);
+  const submitRegister = useAppStore((s) => s.submitRegister);
+  const classes = useAppStore((s) => s.classes);
+  const subjects = useAppStore((s) => s.subjects);
+  const studentsByClass = useAppStore((s) => s.studentsByClass);
+  const studentsLoadingClassId = useAppStore((s) => s.studentsLoadingClassId);
 
   const classInfo = session
     ? classes.find((c) => c.id === session.classId)
     : undefined;
+  const roster = session ? (studentsByClass[session.classId] ?? []) : [];
 
   if (!session || !classInfo) {
     return (
       <View className="flex-1 bg-background">
-        <Header title="Register" backButton />
+        <Header title="Registre" backButton />
         <View className="flex-1 items-center justify-center px-container-margin gap-md">
           <MaterialIcons
             name="assignment-late"
@@ -38,10 +44,10 @@ export default function AttendanceRegister() {
             color={colors.onSurfaceVariant}
           />
           <AppText className="text-base text-on-surface-variant text-center">
-            No active class checked in today.
+            Aucune classe active enregistrée aujourd'hui.
           </AppText>
           <PrimaryButton
-            label="Back to Home"
+            label="Retour à l'accueil"
             onPress={() => router.replace("/home")}
           />
         </View>
@@ -49,18 +55,40 @@ export default function AttendanceRegister() {
     );
   }
 
-  const presentStudents = classInfo.roster.filter(
+  const presentStudents = roster.filter(
     (s) => session.attendance[s.id]?.present,
   );
-  const absentStudents = classInfo.roster.filter(
+  const absentStudents = roster.filter(
     (s) => !session.attendance[s.id]?.present,
   );
-  const total = classInfo.roster.length;
+  const total = roster.length;
+  const rosterLoading = studentsLoadingClassId === session.classId;
+  const isComplete = total > 0 && roster.every((s) => session.attendance[s.id]);
+  const isSubmitted = session.submittedAt !== null;
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const result = await submitRegister(session.id);
+      if (result.success) {
+        Alert.alert("Registre soumis", "La présence a été envoyée avec succès.");
+      } else {
+        Alert.alert(
+          "Échec de l'envoi",
+          result.failedCount > 0
+            ? `${result.failedCount} élève(s) n'ont pas pu être envoyés. Réessayez.`
+            : "La session n'a pas pu être ouverte. Vérifiez votre connexion, ou que vous êtes bien assigné à cette matière, puis réessayez.",
+        );
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Register" backButton />
-      <ScrollView className="flex-1" contentContainerClassName="pb-24">
+      <Header title="Registre" backButton />
+      <ScrollView className="flex-1" contentContainerClassName={isComplete ? "pb-40" : "pb-24"}>
         <View className="px-container-margin pt-lg pb-sm">
           <View className="flex-row justify-between items-start mb-1">
             <View className="flex-1 pr-2">
@@ -68,7 +96,7 @@ export default function AttendanceRegister() {
                 weight="medium"
                 className="text-on-surface-variant text-xs uppercase tracking-wider mb-1"
               >
-                Attendance Sheet
+                Feuille de présence
               </AppText>
               <AppText weight="bold" className="text-2xl text-on-surface">
                 {classInfo.name}
@@ -87,7 +115,7 @@ export default function AttendanceRegister() {
                   className="text-xs text-on-primary"
                   numberOfLines={1}
                 >
-                  {session.subjectCode} · {subjectLabel(session.subjectCode)}
+                  {subjects.find((sub) => sub.code === session.subjectCode)?.label ?? session.subjectCode}
                 </AppText>
               </View>
             </View>
@@ -96,7 +124,7 @@ export default function AttendanceRegister() {
                 {presentStudents.length}/{total}
               </AppText>
               <AppText className="text-xs text-on-primary opacity-80">
-                present
+                présents
               </AppText>
             </View>
           </View>
@@ -112,7 +140,7 @@ export default function AttendanceRegister() {
             />
             <TextInput
               className="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-xl font-hanken text-on-surface"
-              placeholder="Search students..."
+              placeholder="Rechercher des élèves..."
               placeholderTextColor={colors.outline}
             />
           </View>
@@ -127,7 +155,7 @@ export default function AttendanceRegister() {
                   tab === "present" ? "text-primary" : "text-on-surface-variant"
                 }
               >
-                Present ({presentStudents.length})
+                Présents ({presentStudents.length})
               </AppText>
             </Pressable>
             <Pressable
@@ -140,13 +168,18 @@ export default function AttendanceRegister() {
                   tab === "absent" ? "text-primary" : "text-on-surface-variant"
                 }
               >
-                Not Yet Arrived ({absentStudents.length})
+                Pas encore arrivés ({absentStudents.length})
               </AppText>
             </Pressable>
           </View>
         </View>
 
         <View className="px-container-margin gap-md mt-1">
+          {rosterLoading && roster.length === 0 && (
+            <AppText className="text-sm text-on-surface-variant text-center py-lg">
+              Chargement des élèves...
+            </AppText>
+          )}
           {tab === "present"
             ? presentStudents.map((student) => (
                 <PresentStudentRow
@@ -161,6 +194,7 @@ export default function AttendanceRegister() {
                   key={student.id}
                   student={student}
                   grade={classInfo.name}
+                  isAbsent={session.attendance[student.id]?.absent}
                   onMarkPresent={() =>
                     markStudentPresent(
                       session.id,
@@ -171,13 +205,16 @@ export default function AttendanceRegister() {
                       }),
                     )
                   }
+                  onMarkAbsent={() => markStudentAbsent(session.id, student.id)}
                 />
               ))}
         </View>
       </ScrollView>
       <Pressable
         onPress={() => router.push("/scanner")}
-        className="absolute right-6 bottom-6 w-14 h-14 bg-primary rounded-[999px] items-center justify-center active:opacity-90"
+        className={`absolute right-6 w-14 h-14 bg-primary rounded-[999px] items-center justify-center active:opacity-90 ${
+          isComplete ? "bottom-24" : "bottom-6"
+        }`}
         style={{
           elevation: 4,
           shadowColor: "#000",
@@ -192,6 +229,23 @@ export default function AttendanceRegister() {
           color={colors.onPrimary}
         />
       </Pressable>
+
+      {isComplete && (
+        <View className="absolute left-0 right-0 bottom-0 bg-surface border-t border-outline-variant p-container-margin">
+          <PrimaryButton
+            label={
+              submitting
+                ? "Envoi en cours..."
+                : isSubmitted
+                  ? "Registre soumis · Mettre à jour"
+                  : "Soumettre le registre"
+            }
+            icon={isSubmitted ? "check-circle" : "cloud-upload"}
+            onPress={handleSubmit}
+            disabled={submitting}
+          />
+        </View>
+      )}
     </View>
   );
 }

@@ -1,0 +1,58 @@
+import { api, clearToken, setToken } from "./api";
+
+export type AuthUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: "teacher" | "admin";
+};
+
+type ApiEnvelope<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+};
+
+export class AuthError extends Error {}
+
+export async function login(
+  email: string,
+  password: string,
+): Promise<AuthUser> {
+  try {
+    const response = await api.post<
+      ApiEnvelope<{ token: string; user: AuthUser }>
+    >("/login", { email, password });
+
+    await setToken(response.data.data.token);
+    return response.data.data.user;
+  } catch (error) {
+    if (axiosIsValidationError(error)) {
+      throw new AuthError("Identifiants incorrects.");
+    }
+    throw new AuthError("Impossible de se connecter. Vérifiez votre réseau.");
+  }
+}
+
+export async function fetchMe(): Promise<AuthUser> {
+  const response =
+    await api.get<ApiEnvelope<AuthUser>>("/me");
+  return response.data.data;
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await api.post("/logout");
+  } finally {
+    await clearToken();
+  }
+}
+
+function axiosIsValidationError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    (error as { response?: { status?: number } }).response?.status === 422
+  );
+}

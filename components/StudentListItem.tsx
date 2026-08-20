@@ -22,6 +22,7 @@ export function PresentStudentRow({ student, grade, time }: RowProps & { time?: 
         name: student.name,
         grade,
         studentId: studentIdFor(student.id),
+        qrToken: student.qrToken,
         ...(student.img ? { img: student.img } : { initials: student.initials, color: student.color }),
       },
     });
@@ -46,7 +47,7 @@ export function PresentStudentRow({ student, grade, time }: RowProps & { time?: 
           <AppText weight="bold" className="text-on-surface">
             {student.name}
           </AppText>
-          <AppText className="text-sm text-on-surface-variant">Arrived at {time}</AppText>
+          <AppText className="text-sm text-on-surface-variant">Arrivé à {time}</AppText>
         </View>
       </View>
       <View className="w-8 h-8 rounded-[999px] bg-[#E8F5E9] items-center justify-center">
@@ -59,8 +60,10 @@ export function PresentStudentRow({ student, grade, time }: RowProps & { time?: 
 export function AbsentStudentRow({
   student,
   grade,
+  isAbsent,
   onMarkPresent,
-}: RowProps & { onMarkPresent?: () => void }) {
+  onMarkAbsent,
+}: RowProps & { isAbsent?: boolean; onMarkPresent?: () => void; onMarkAbsent?: () => void }) {
   const router = useRouter();
 
   const openIdCard = () =>
@@ -70,6 +73,7 @@ export function AbsentStudentRow({
         name: student.name,
         grade,
         studentId: studentIdFor(student.id),
+        qrToken: student.qrToken,
         ...(student.img ? { img: student.img } : { initials: student.initials, color: student.color }),
       },
     });
@@ -94,20 +98,38 @@ export function AbsentStudentRow({
           <AppText weight="bold" className="text-on-surface">
             {student.name}
           </AppText>
-          <AppText className="text-sm text-error">Unaccounted for</AppText>
+          <AppText className="text-sm text-error">
+            {isAbsent ? 'Marqué absent' : 'Non comptabilisé'}
+          </AppText>
         </View>
       </View>
-      {onMarkPresent && (
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation();
-            onMarkPresent();
-          }}
-          className="px-4 py-2 border border-outline-variant rounded-lg active:bg-surface-container">
-          <AppText weight="bold" className="text-on-surface">
-            Mark Present
-          </AppText>
-        </Pressable>
+      {(onMarkPresent || onMarkAbsent) && (
+        <View className="flex-row gap-2">
+          {onMarkPresent && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onMarkPresent();
+              }}
+              accessibilityLabel="Marquer présent"
+              className="w-9 h-9 items-center justify-center border border-outline-variant rounded-lg active:bg-surface-container">
+              <MaterialIcons name="check" size={18} color={colors.onSurface} />
+            </Pressable>
+          )}
+          {onMarkAbsent && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onMarkAbsent();
+              }}
+              accessibilityLabel="Marquer absent"
+              className={`w-9 h-9 items-center justify-center border rounded-lg active:bg-error-container ${
+                isAbsent ? 'bg-error-container border-error' : 'border-outline-variant'
+              }`}>
+              <MaterialIcons name="close" size={18} color={isAbsent ? colors.onErrorContainer : colors.error} />
+            </Pressable>
+          )}
+        </View>
       )}
     </Pressable>
   );
