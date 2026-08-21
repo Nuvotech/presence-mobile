@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "./AppText";
 import { colors } from "../theme/tokens";
+import { useTranslation } from "../lib/i18n/useTranslation";
 
 const QR_SIZE = 168;
 
@@ -31,6 +32,7 @@ export function IDCard({
   initials = "??",
   color = "bg-secondary-container",
 }: IDCardProps) {
+  const { t } = useTranslation();
   const rotateX = useSharedValue(0);
   const rotateY = useSharedValue(0);
 
@@ -106,7 +108,7 @@ export function IDCard({
             >
               <MaterialIcons name="qr-code-2" size={40} color={colors.outline} />
               <AppText className="text-xs text-on-surface-variant text-center mt-1">
-                Code QR indisponible
+                {t.idCard.qrUnavailable}
               </AppText>
             </View>
           )}
@@ -120,7 +122,7 @@ export function IDCard({
 
         <View className="bg-surface-container-low px-sm py-2">
           <AppText className="text-[10px] text-on-surface-variant text-center leading-tight">
-            À présenter chaque matin pour le scan de présence
+            {t.idCard.presentEachMorning}
           </AppText>
         </View>
       </Animated.View>

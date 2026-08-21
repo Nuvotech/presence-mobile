@@ -52,15 +52,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="login" />
-            <Stack.Screen name="home" />
-            <Stack.Screen name="profile" />
-            <Stack.Screen name="class-scanner" />
-            <Stack.Screen name="register" />
-            <Stack.Screen name="scanner" />
-            <Stack.Screen name="id-card" />
-            <Stack.Screen name="register-student" />
-            <Stack.Screen name="history" />
-            <Stack.Screen name="history/[id]" />
+            <Stack.Screen name="(drawer)" />
             <Stack.Screen
               name="scan-result/success"
               options={{ presentation: 'fullScreenModal', animation: 'fade' }}

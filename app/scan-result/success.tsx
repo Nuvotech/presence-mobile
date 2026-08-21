@@ -11,9 +11,11 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { AppText } from '../../components/AppText';
+import { useTranslation } from '../../lib/i18n/useTranslation';
 
 export default function SuccessFeedback() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { name, grade, time } = useLocalSearchParams<{ name?: string; grade?: string; time?: string }>();
   const iconScale = useSharedValue(0.8);
   const iconOpacity = useSharedValue(0);
@@ -62,7 +64,7 @@ export default function SuccessFeedback() {
         <View className="flex-row items-center gap-2 bg-white/10 px-sm py-xs rounded-full border border-white/20">
           <MaterialIcons name="notifications-active" size={16} color="#ffffff" />
           <AppText weight="medium" className="text-xs uppercase tracking-widest text-white">
-            Parent averti.
+            {t.scanResult.parentNotified}
           </AppText>
         </View>
       </Animated.View>

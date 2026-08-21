@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { colors } from '../theme/tokens';
+import { useTranslation } from '../lib/i18n/useTranslation';
 import type { RosterStudent } from '../data/classes';
 
 const studentIdFor = (id: number) => `SC-2024-88${String(id).padStart(2, '0')}`;
@@ -14,6 +15,7 @@ type RowProps = {
 
 export function PresentStudentRow({ student, grade, time }: RowProps & { time?: string }) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const openIdCard = () =>
     router.push({
@@ -47,7 +49,7 @@ export function PresentStudentRow({ student, grade, time }: RowProps & { time?: 
           <AppText weight="bold" className="text-on-surface">
             {student.name}
           </AppText>
-          <AppText className="text-sm text-on-surface-variant">Arrivé à {time}</AppText>
+          <AppText className="text-sm text-on-surface-variant">{t.studentListItem.arrivedAt(time ?? '')}</AppText>
         </View>
       </View>
       <View className="w-8 h-8 rounded-[999px] bg-[#E8F5E9] items-center justify-center">
@@ -65,6 +67,7 @@ export function AbsentStudentRow({
   onMarkAbsent,
 }: RowProps & { isAbsent?: boolean; onMarkPresent?: () => void; onMarkAbsent?: () => void }) {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const openIdCard = () =>
     router.push({
@@ -99,7 +102,7 @@ export function AbsentStudentRow({
             {student.name}
           </AppText>
           <AppText className="text-sm text-error">
-            {isAbsent ? 'Marqué absent' : 'Non comptabilisé'}
+            {isAbsent ? t.studentListItem.markedAbsent : t.studentListItem.notCounted}
           </AppText>
         </View>
       </View>
@@ -111,7 +114,7 @@ export function AbsentStudentRow({
                 e.stopPropagation();
                 onMarkPresent();
               }}
-              accessibilityLabel="Marquer présent"
+              accessibilityLabel={t.studentListItem.markPresentLabel}
               className="w-9 h-9 items-center justify-center border border-outline-variant rounded-lg active:bg-surface-container">
               <MaterialIcons name="check" size={18} color={colors.onSurface} />
             </Pressable>
@@ -122,7 +125,7 @@ export function AbsentStudentRow({
                 e.stopPropagation();
                 onMarkAbsent();
               }}
-              accessibilityLabel="Marquer absent"
+              accessibilityLabel={t.studentListItem.markAbsentLabel}
               className={`w-9 h-9 items-center justify-center border rounded-lg active:bg-error-container ${
                 isAbsent ? 'bg-error-container border-error' : 'border-outline-variant'
               }`}>

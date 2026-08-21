@@ -12,9 +12,11 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { AppText } from '../../components/AppText';
+import { useTranslation } from '../../lib/i18n/useTranslation';
 
 export default function ErrorFeedback() {
   const router = useRouter();
+  const { t } = useTranslation();
   const bounce = useSharedValue(0);
 
   useEffect(() => {
@@ -36,10 +38,10 @@ export default function ErrorFeedback() {
         <MaterialIcons name="cancel" size={120} color="#ffffff" />
       </Animated.View>
       <AppText weight="bold" className="text-[32px] text-white mb-2 text-center">
-        Carte non reconnue.
+        {t.scanResult.errorTitle}
       </AppText>
       <AppText className="text-lg text-white/90 mb-12 text-center">
-        Veuillez vérifier la carte ou contacter le bureau.
+        {t.scanResult.errorSubtitle}
       </AppText>
 
       <View className="w-full max-w-xs gap-4">
@@ -48,14 +50,14 @@ export default function ErrorFeedback() {
           className="w-full h-14 bg-white rounded-xl flex-row items-center justify-center gap-2 active:opacity-90">
           <MaterialIcons name="arrow-back" size={20} color="#ef4444" />
           <AppText weight="bold" className="text-[#ef4444]">
-            Réessayer
+            {t.scanResult.errorRetry}
           </AppText>
         </Pressable>
         <Pressable
           onPress={() => router.replace('/register')}
           className="w-full h-12 border border-white/40 rounded-xl items-center justify-center active:bg-white/10">
           <AppText weight="bold" className="text-white">
-            Ignorer
+            {t.scanResult.errorIgnore}
           </AppText>
         </Pressable>
       </View>

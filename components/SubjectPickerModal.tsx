@@ -2,6 +2,7 @@ import { View, Pressable, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { colors } from '../theme/tokens';
+import { useTranslation } from '../lib/i18n/useTranslation';
 import type { Subject } from '../data/subjects';
 
 type SubjectPickerModalProps = {
@@ -12,6 +13,7 @@ type SubjectPickerModalProps = {
 };
 
 export function SubjectPickerModal({ visible, subjects, onSelect, onClose }: SubjectPickerModalProps) {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1 bg-black/40 justify-end" onPress={onClose}>
@@ -19,10 +21,10 @@ export function SubjectPickerModal({ visible, subjects, onSelect, onClose }: Sub
           className="bg-surface-container-lowest rounded-t-xl px-container-margin pt-lg pb-8"
           onPress={(e) => e.stopPropagation()}>
           <AppText weight="bold" className="text-lg text-on-surface mb-1">
-            Sélectionner une matière
+            {t.subjectPicker.title}
           </AppText>
           <AppText className="text-sm text-on-surface-variant mb-md">
-            Cette matière s'appliquera à toutes les classes enregistrées aujourd'hui.
+            {t.subjectPicker.subtitle}
           </AppText>
           {subjects.map((subject) => (
             <Pressable

@@ -10,11 +10,12 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Header } from '../components/Header';
-import { AppText } from '../components/AppText';
-import { colors } from '../theme/tokens';
-import { useAppStore } from '../store/useAppStore';
-import { scanStudent } from '../lib/sessions';
+import { Header } from '../../components/Header';
+import { AppText } from '../../components/AppText';
+import { colors } from '../../theme/tokens';
+import { useAppStore } from '../../store/useAppStore';
+import { useTranslation } from '../../lib/i18n/useTranslation';
+import { scanStudent } from '../../lib/sessions';
 
 const FRAME_SIZE = 256;
 
@@ -23,6 +24,7 @@ const formatTime = (iso: string | null) =>
 
 export default function ScannerPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const session = useAppStore((s) => s.activeSession());
   const markStudentPresent = useAppStore((s) => s.markStudentPresent);
@@ -103,7 +105,7 @@ export default function ScannerPage() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Scanner un élève" backButton />
+      <Header title={t.scanner.headerTitle} backButton />
       <View className="flex-1 bg-black items-center justify-center relative overflow-hidden">
         {permission?.granted ? (
           <CameraView
@@ -125,8 +127,8 @@ export default function ScannerPage() {
               className="bg-white/10 px-4 py-3 rounded-xl">
               <AppText className="text-white text-sm text-center">
                 {permission && !permission.canAskAgain
-                  ? "Accès à la caméra refusé. Activez-le dans les réglages de l'appareil pour scanner."
-                  : "Appuyez pour activer l'accès à la caméra"}
+                  ? t.common.cameraDeniedMessage
+                  : t.common.cameraPromptMessage}
               </AppText>
             </Pressable>
           </View>
@@ -145,7 +147,7 @@ export default function ScannerPage() {
 
         <View className="absolute bottom-12 self-center z-20 px-container-margin">
           <AppText weight="medium" className="text-sm text-white bg-black/40 py-2 px-4 rounded-full overflow-hidden">
-            Alignez le code QR dans le cadre
+            {t.scanner.scanHint}
           </AppText>
         </View>
       </View>
@@ -158,13 +160,13 @@ export default function ScannerPage() {
             </View>
             <View>
               <AppText weight="bold" className="text-primary">
-                {presentCount} élèves
+                {t.scanner.studentsScannedCount(presentCount)}
               </AppText>
-              <AppText className="text-sm text-on-surface-variant">Scannés aujourd'hui</AppText>
+              <AppText className="text-sm text-on-surface-variant">{t.scanner.scannedToday}</AppText>
             </View>
           </View>
           <View className="items-end">
-            <AppText className="text-sm text-on-primary-container">Objectif : {total}</AppText>
+            <AppText className="text-sm text-on-primary-container">{t.scanner.goalLabel(total)}</AppText>
             <View className="w-24 h-2 bg-surface-container-high rounded-full mt-2 overflow-hidden">
               <View
                 className="h-full bg-primary"
@@ -178,7 +180,7 @@ export default function ScannerPage() {
           className="w-full bg-primary h-12 rounded-xl flex-row items-center justify-center gap-2 active:opacity-90">
           <MaterialIcons name="list-alt" size={20} color={colors.onPrimary} />
           <AppText weight="bold" className="text-on-primary">
-            Voir le registre
+            {t.scanner.viewRegister}
           </AppText>
         </Pressable>
       </View>

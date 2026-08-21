@@ -5,16 +5,18 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Header } from '../components/Header';
-import { AppText } from '../components/AppText';
-import { TextField } from '../components/TextField';
-import { PrimaryButton } from '../components/Buttons';
-import { colors } from '../theme/tokens';
+import { Header } from '../../components/Header';
+import { AppText } from '../../components/AppText';
+import { TextField } from '../../components/TextField';
+import { PrimaryButton } from '../../components/Buttons';
+import { colors } from '../../theme/tokens';
+import { useTranslation } from '../../lib/i18n/useTranslation';
 
 const countryCodes = ['+1', '+27'];
 
 export default function RegisterStudent() {
   const router = useRouter();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [fullName, setFullName] = useState('');
@@ -42,7 +44,7 @@ export default function RegisterStudent() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Inscrire un élève" backButton />
+      <Header title={t.registerStudent.headerTitle} backButton />
       <ScrollView contentContainerClassName="px-container-margin pt-md pb-32" keyboardShouldPersistTaps="handled">
         <View className="items-center justify-center py-sm">
           <View className="relative">
@@ -54,7 +56,7 @@ export default function RegisterStudent() {
               ) : (
                 <>
                   <MaterialIcons name="add-a-photo" size={32} color={colors.outline} />
-                  <AppText className="text-xs text-on-surface-variant mt-1">Ajouter une photo</AppText>
+                  <AppText className="text-xs text-on-surface-variant mt-1">{t.registerStudent.addPhoto}</AppText>
                 </>
               )}
             </Pressable>
@@ -68,15 +70,15 @@ export default function RegisterStudent() {
 
         <View className="gap-md">
           <TextField
-            label="Nom complet"
-            placeholder="ex. Julian Anderson"
+            label={t.registerStudent.fullNameLabel}
+            placeholder={t.registerStudent.fullNamePlaceholder}
             value={fullName}
             onChangeText={setFullName}
           />
 
           <View className="gap-1">
             <AppText weight="medium" className="text-sm text-on-surface-variant">
-              Classe
+              {t.registerStudent.classLabel}
             </AppText>
             <View className="rounded-xl border border-outline-variant bg-surface-container-lowest overflow-hidden">
               <Picker selectedValue={grade} onValueChange={setGrade}>
@@ -89,12 +91,12 @@ export default function RegisterStudent() {
 
           <View className="h-px bg-outline-variant my-1" />
           <AppText weight="bold" className="text-sm text-primary tracking-widest uppercase py-2">
-            Contact du tuteur
+            {t.registerStudent.guardianContact}
           </AppText>
 
           <View className="gap-1">
             <AppText weight="medium" className="text-sm text-on-surface-variant">
-              Numéro WhatsApp du parent
+              {t.registerStudent.whatsappLabel}
             </AppText>
             <View className="flex-row gap-2">
               <View className="w-24 rounded-xl border border-outline-variant bg-surface-container-low overflow-hidden">
@@ -106,7 +108,7 @@ export default function RegisterStudent() {
               </View>
               <TextInput
                 className="flex-1 h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest font-hanken text-on-surface"
-                placeholder="812 345 6789"
+                placeholder={t.registerStudent.whatsappPlaceholder}
                 placeholderTextColor={colors.outline}
                 keyboardType="phone-pad"
                 value={whatsapp}
@@ -120,7 +122,7 @@ export default function RegisterStudent() {
       <View
         className="absolute bottom-0 left-0 right-0 bg-surface/95 p-container-margin border-t border-outline-variant"
         style={{ paddingBottom: insets.bottom + 16 }}>
-        <PrimaryButton label="Enregistrer l'élève" icon="check-circle" iconPosition="right" onPress={handleSave} />
+        <PrimaryButton label={t.registerStudent.save} icon="check-circle" iconPosition="right" onPress={handleSave} />
       </View>
     </View>
   );

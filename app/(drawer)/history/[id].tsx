@@ -1,14 +1,16 @@
 import { View, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Header } from '../../components/Header';
-import { AppText } from '../../components/AppText';
-import { PresentStudentRow, AbsentStudentRow } from '../../components/StudentListItem';
-import { colors } from '../../theme/tokens';
-import { useAppStore } from '../../store/useAppStore';
-import { formatDisplayDate } from '../../lib/date';
+import { Header } from '../../../components/Header';
+import { AppText } from '../../../components/AppText';
+import { PresentStudentRow, AbsentStudentRow } from '../../../components/StudentListItem';
+import { colors } from '../../../theme/tokens';
+import { useAppStore } from '../../../store/useAppStore';
+import { useTranslation } from '../../../lib/i18n/useTranslation';
+import { formatDisplayDate } from '../../../lib/date';
 
 export default function HistorySessionDetail() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const classes = useAppStore((s) => s.classes);
   const studentsByClass = useAppStore((s) => s.studentsByClass);
@@ -19,9 +21,9 @@ export default function HistorySessionDetail() {
   if (!session || !classInfo) {
     return (
       <View className="flex-1 bg-background">
-        <Header title="Fiche de classe" backButton />
+        <Header title={t.historyDetail.headerTitle} backButton />
         <View className="flex-1 items-center justify-center px-container-margin">
-          <AppText className="text-base text-on-surface-variant text-center">Fiche introuvable.</AppText>
+          <AppText className="text-base text-on-surface-variant text-center">{t.historyDetail.notFound}</AppText>
         </View>
       </View>
     );
@@ -33,7 +35,7 @@ export default function HistorySessionDetail() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Fiche de classe" backButton />
+      <Header title={t.historyDetail.headerTitle} backButton />
       <ScrollView contentContainerClassName="pb-24">
         <View className="px-container-margin pt-lg pb-sm">
           <AppText weight="medium" className="text-on-surface-variant text-xs uppercase tracking-wider mb-1">
@@ -48,7 +50,7 @@ export default function HistorySessionDetail() {
           <View className="mt-2 self-start bg-surface-container px-3 py-1.5 rounded-[999px] flex-row items-center gap-2">
             <MaterialIcons name="check-circle" size={16} color={colors.onSurfaceVariant} />
             <AppText weight="bold" className="text-sm text-on-surface">
-              {presentStudents.length}/{roster.length} présents
+              {presentStudents.length}/{roster.length} {t.common.presentSuffix}
             </AppText>
           </View>
         </View>
@@ -56,7 +58,7 @@ export default function HistorySessionDetail() {
         {presentStudents.length > 0 && (
           <View className="px-container-margin mt-md gap-md">
             <AppText weight="bold" className="text-sm text-on-surface-variant uppercase tracking-wider">
-              Présents
+              {t.historyDetail.present}
             </AppText>
             {presentStudents.map((student) => (
               <PresentStudentRow
@@ -72,7 +74,7 @@ export default function HistorySessionDetail() {
         {absentStudents.length > 0 && (
           <View className="px-container-margin mt-md gap-md">
             <AppText weight="bold" className="text-sm text-on-surface-variant uppercase tracking-wider">
-              Absents
+              {t.historyDetail.absent}
             </AppText>
             {absentStudents.map((student) => (
               <AbsentStudentRow key={student.id} student={student} grade={classInfo.name} />

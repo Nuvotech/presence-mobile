@@ -13,7 +13,16 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
-export class AuthError extends Error {}
+export type AuthErrorCode = "invalid_credentials" | "network";
+
+export class AuthError extends Error {
+  code: AuthErrorCode;
+
+  constructor(code: AuthErrorCode) {
+    super(code);
+    this.code = code;
+  }
+}
 
 export async function login(
   email: string,
@@ -28,9 +37,9 @@ export async function login(
     return response.data.data.user;
   } catch (error) {
     if (axiosIsValidationError(error)) {
-      throw new AuthError("Identifiants incorrects.");
+      throw new AuthError("invalid_credentials");
     }
-    throw new AuthError("Impossible de se connecter. Vérifiez votre réseau.");
+    throw new AuthError("network");
   }
 }
 

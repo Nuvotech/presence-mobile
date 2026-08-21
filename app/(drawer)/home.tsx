@@ -9,18 +9,20 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Header } from "../components/Header";
-import { AppText } from "../components/AppText";
-import { PrimaryButton, OutlineButton } from "../components/Buttons";
-import { SubjectPickerModal } from "../components/SubjectPickerModal";
-import { colors } from "../theme/tokens";
-import { useAppStore } from "../store/useAppStore";
-import { avatarUriFor } from "../lib/avatar";
-import { todayStr } from "../lib/date";
-import type { ClassInfo } from "../data/classes";
+import { Header } from "../../components/Header";
+import { AppText } from "../../components/AppText";
+import { PrimaryButton, OutlineButton } from "../../components/Buttons";
+import { SubjectPickerModal } from "../../components/SubjectPickerModal";
+import { colors } from "../../theme/tokens";
+import { useAppStore } from "../../store/useAppStore";
+import { useTranslation } from "../../lib/i18n/useTranslation";
+import { avatarUriFor } from "../../lib/avatar";
+import { todayStr } from "../../lib/date";
+import type { ClassInfo } from "../../data/classes";
 
 export default function HomePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const authUser = useAppStore((s) => s.authUser);
   const sessions = useAppStore((s) => s.sessions);
   const todaysSessions = useMemo(
@@ -78,7 +80,7 @@ export default function HomePage() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Accueil" />
+      <Header title={t.home.headerTitle} />
       <ScrollView
         contentContainerClassName="px-container-margin pt-lg pb-24"
         keyboardShouldPersistTaps="handled"
@@ -101,7 +103,7 @@ export default function HomePage() {
               weight="bold"
               className="text-xs text-on-secondary-container"
             >
-              {authUser?.role === "admin" ? "Administrateur" : "Enseignant"}
+              {authUser?.role === "admin" ? t.common.roleAdmin : t.common.roleTeacher}
             </AppText>
           </View>
         </View>
@@ -112,7 +114,7 @@ export default function HomePage() {
               weight="medium"
               className="text-on-surface-variant text-xs uppercase tracking-wider"
             >
-              Aujourd'hui
+              {t.home.today}
             </AppText>
             {todaysSessions.map((session) => {
               const presentCount = Object.values(session.attendance).filter(
@@ -143,7 +145,7 @@ export default function HomePage() {
                         {subjects.find(
                           (sub) => sub.code === session.subjectCode,
                         )?.label ?? session.subjectCode}{" "}
-                        · {presentCount} présents
+                        · {t.common.presentCount(presentCount)}
                       </AppText>
                     </View>
                   </View>
@@ -159,8 +161,7 @@ export default function HomePage() {
         ) : (
           <View className="mt-md bg-surface-container rounded-xl p-sm">
             <AppText className="text-sm text-on-surface-variant text-center">
-              Aucune classe enregistrée aujourd'hui. Scannez une classe pour
-              commencer.
+              {t.home.noSessionsToday}
             </AppText>
           </View>
         )}
@@ -168,20 +169,20 @@ export default function HomePage() {
         <View className="mt-lg gap-sm">
           <View className="flex-row gap-sm">
             <PrimaryButton
-              label="Scanner une classe"
+              label={t.home.scanClass}
               icon="qr-code-scanner"
               onPress={() => router.push("/class-scanner")}
               className="flex-1"
             />
             <OutlineButton
-              label="Choisir une classe"
+              label={t.home.chooseClass}
               icon="list"
               onPress={() => setPickerVisible(true)}
               className="flex-1"
             />
           </View>
           <OutlineButton
-            label="Historique"
+            label={t.home.historyButton}
             icon="history"
             onPress={() => router.push("/history")}
           />
@@ -198,7 +199,7 @@ export default function HomePage() {
             weight="medium"
             className="text-sm text-on-surface-variant underline"
           >
-            Déconnexion
+            {t.common.logout}
           </AppText>
         </Pressable>
       </ScrollView>
@@ -218,14 +219,14 @@ export default function HomePage() {
             onPress={(e) => e.stopPropagation()}
           >
             <AppText weight="bold" className="text-lg text-on-surface mb-md">
-              Sélectionner une classe
+              {t.home.selectClassModalTitle}
             </AppText>
             {classesLoading && (
               <ActivityIndicator color={colors.primary} className="my-md" />
             )}
             {!classesLoading && classes.length === 0 && (
               <AppText className="text-sm text-on-surface-variant text-center my-md">
-                Aucune classe disponible.
+                {t.home.noClassesAvailable}
               </AppText>
             )}
             {classes.map((classInfo) => (

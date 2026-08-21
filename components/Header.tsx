@@ -1,9 +1,11 @@
 import { View, Pressable, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { useAppStore } from '../store/useAppStore';
+import { useTranslation } from '../lib/i18n/useTranslation';
 import { colors } from '../theme/tokens';
 import { avatarUriFor } from '../lib/avatar';
 
@@ -12,10 +14,12 @@ type HeaderProps = {
   backButton?: boolean;
 };
 
-export function Header({ title = 'Portail de Présence', backButton = false }: HeaderProps) {
+export function Header({ title, backButton = false }: HeaderProps) {
   const router = useRouter();
+  const navigation = useNavigation<DrawerNavigationProp<Record<string, object | undefined>>>();
   const insets = useSafeAreaInsets();
   const authUser = useAppStore((s) => s.authUser);
+  const { t } = useTranslation();
   const avatarUri = avatarUriFor(authUser?.name ?? '');
   return (
     <View className="w-full bg-surface border-b border-outline-variant" style={{ paddingTop: insets.top }}>
@@ -26,10 +30,14 @@ export function Header({ title = 'Portail de Présence', backButton = false }: H
               <MaterialIcons name="arrow-back" size={24} color={colors.primary} />
             </Pressable>
           ) : (
-            <MaterialIcons name="menu" size={24} color={colors.primary} />
+            <Pressable
+              onPress={() => navigation.openDrawer()}
+              className="p-2 -ml-2 rounded-full active:bg-surface-container">
+              <MaterialIcons name="menu" size={24} color={colors.primary} />
+            </Pressable>
           )}
           <AppText weight="bold" className="text-xl text-primary ml-2" numberOfLines={1}>
-            {title}
+            {title ?? t.common.appTitle}
           </AppText>
         </View>
         <Pressable

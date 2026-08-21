@@ -15,10 +15,12 @@ import { TextField } from "../components/TextField";
 import { colors } from "../theme/tokens";
 import { logoUri } from "../data/students";
 import { useAppStore } from "../store/useAppStore";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import { AuthError, fetchMe, login as apiLogin } from "../lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const setAuthUser = useAppStore((s) => s.setAuthUser);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,11 +47,15 @@ export default function LoginPage() {
 
       router.replace("/home");
     } catch (err) {
-      setError(
-        err instanceof AuthError
-          ? err.message
-          : "Une erreur inattendue est survenue.",
-      );
+      if (err instanceof AuthError) {
+        setError(
+          err.code === "invalid_credentials"
+            ? t.login.invalidCredentialsError
+            : t.login.networkError,
+        );
+      } else {
+        setError(t.login.genericError);
+      }
     } finally {
       spin.value = 0;
       setIsLoading(false);
@@ -72,25 +78,25 @@ export default function LoginPage() {
               weight="bold"
               className="text-2xl text-primary tracking-tight"
             >
-              PRESENT !
+              {t.login.wordmark}
             </AppText>
             <AppText className="text-base text-on-surface-variant mt-1">
-              Portail Enseignant
+              {t.login.subtitle}
             </AppText>
           </View>
 
           <View className="w-full gap-md">
             <TextField
-              label="E-mail de l'enseignant"
+              label={t.login.emailLabel}
               icon="mail"
-              placeholder="nom@ecole.cd"
+              placeholder={t.login.emailPlaceholder}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
             />
             <TextField
-              label="Mot de passe"
+              label={t.login.passwordLabel}
               icon="lock"
               secureTextEntry
               value={password}
@@ -116,7 +122,7 @@ export default function LoginPage() {
                 </Animated.View>
               ) : (
                 <AppText weight="bold" className="text-on-primary text-base">
-                  Connexion
+                  {t.login.submit}
                 </AppText>
               )}
             </Pressable>
@@ -126,7 +132,7 @@ export default function LoginPage() {
             weight="medium"
             className="mt-lg text-sm text-on-surface-variant underline"
           >
-            Mot de passe oublié ?
+            {t.login.forgotPassword}
           </AppText>
         </View>
       </KeyboardAvoidingView>

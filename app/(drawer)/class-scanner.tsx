@@ -10,17 +10,19 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { Header } from '../components/Header';
-import { AppText } from '../components/AppText';
-import { SubjectPickerModal } from '../components/SubjectPickerModal';
-import { colors } from '../theme/tokens';
-import type { ClassInfo } from '../data/classes';
-import { useAppStore } from '../store/useAppStore';
+import { Header } from '../../components/Header';
+import { AppText } from '../../components/AppText';
+import { SubjectPickerModal } from '../../components/SubjectPickerModal';
+import { colors } from '../../theme/tokens';
+import type { ClassInfo } from '../../data/classes';
+import { useAppStore } from '../../store/useAppStore';
+import { useTranslation } from '../../lib/i18n/useTranslation';
 
 const FRAME_SIZE = 256;
 
 export default function ClassScannerPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const activeSubjectCode = useAppStore((s) => s.activeSubjectCode);
   const setActiveSubject = useAppStore((s) => s.setActiveSubject);
@@ -113,7 +115,7 @@ export default function ClassScannerPage() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Scanner une classe" backButton />
+      <Header title={t.classScanner.headerTitle} backButton />
       <View className="flex-1 bg-black items-center justify-center relative overflow-hidden">
         {permission?.granted ? (
           <CameraView
@@ -135,8 +137,8 @@ export default function ClassScannerPage() {
               className="bg-white/10 px-4 py-3 rounded-xl">
               <AppText className="text-white text-sm text-center">
                 {permission && !permission.canAskAgain
-                  ? "Accès à la caméra refusé. Activez-le dans les réglages de l'appareil pour scanner."
-                  : "Appuyez pour activer l'accès à la caméra"}
+                  ? t.common.cameraDeniedMessage
+                  : t.common.cameraPromptMessage}
               </AppText>
             </Pressable>
           </View>
@@ -157,7 +159,7 @@ export default function ClassScannerPage() {
           <AppText
             weight="medium"
             className={`text-sm text-white py-2 px-4 rounded-full overflow-hidden ${scanError ? 'bg-error' : 'bg-black/40'}`}>
-            {scanError ? 'Code QR de classe non reconnu' : 'Alignez le code QR de la classe dans le cadre'}
+            {scanError ? t.classScanner.scanErrorMessage : t.classScanner.scanHint}
           </AppText>
         </View>
       </View>

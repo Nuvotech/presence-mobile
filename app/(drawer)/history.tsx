@@ -1,14 +1,16 @@
 import { View, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Header } from '../components/Header';
-import { AppText } from '../components/AppText';
-import { colors } from '../theme/tokens';
-import { useAppStore } from '../store/useAppStore';
-import { formatDisplayDate, isToday } from '../lib/date';
+import { Header } from '../../components/Header';
+import { AppText } from '../../components/AppText';
+import { colors } from '../../theme/tokens';
+import { useAppStore } from '../../store/useAppStore';
+import { useTranslation } from '../../lib/i18n/useTranslation';
+import { formatDisplayDate, isToday } from '../../lib/date';
 
 export default function HistoryPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const sessions = useAppStore((s) => s.sessions);
   const studentsByClass = useAppStore((s) => s.studentsByClass);
   const subjects = useAppStore((s) => s.subjects);
@@ -18,13 +20,13 @@ export default function HistoryPage() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Historique" backButton />
+      <Header title={t.history.headerTitle} backButton />
       <ScrollView contentContainerClassName="px-container-margin pt-lg pb-24 gap-md">
         {sorted.length === 0 && (
           <View className="items-center justify-center py-xl gap-md">
             <MaterialIcons name="history" size={48} color={colors.onSurfaceVariant} />
             <AppText className="text-base text-on-surface-variant text-center">
-              Aucune classe enregistrée pour le moment.
+              {t.history.emptyState}
             </AppText>
           </View>
         )}
@@ -59,7 +61,7 @@ export default function HistoryPage() {
                     {today && (
                       <View className="px-2 py-0.5 bg-primary rounded">
                         <AppText weight="bold" className="text-[10px] text-on-primary">
-                          AUJOURD'HUI
+                          {t.history.today}
                         </AppText>
                       </View>
                     )}
@@ -67,7 +69,7 @@ export default function HistoryPage() {
                   <AppText className="text-sm text-on-surface-variant">
                     {formatDisplayDate(session.date)} ·{' '}
                     {subjects.find((sub) => sub.code === session.subjectCode)?.label ?? session.subjectCode} ·{' '}
-                    {present}/{total} présents
+                    {present}/{total} {t.common.presentSuffix}
                   </AppText>
                 </View>
               </View>

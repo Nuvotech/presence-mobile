@@ -1,11 +1,13 @@
 import { View, ScrollView, Share } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { Header } from "../components/Header";
-import { AppText } from "../components/AppText";
-import { IDCard } from "../components/IDCard";
-import { PrimaryButton, OutlineButton } from "../components/Buttons";
+import { Header } from "../../components/Header";
+import { AppText } from "../../components/AppText";
+import { IDCard } from "../../components/IDCard";
+import { PrimaryButton, OutlineButton } from "../../components/Buttons";
+import { useTranslation } from "../../lib/i18n/useTranslation";
 
 export default function IDCardPage() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{
     name?: string;
     grade?: string;
@@ -22,20 +24,20 @@ export default function IDCardPage() {
 
   const handleShare = () => {
     Share.share({
-      message: `${name} — ${grade} — ID Élève : ${studentId} — Present`,
+      message: t.idCard.shareMessage(name, grade, studentId),
     });
   };
 
   return (
     <View className="flex-1 bg-background">
-      <Header title="Carte d'élève" backButton />
+      <Header title={t.idCard.headerTitle} backButton />
       <ScrollView contentContainerClassName="items-center pt-xs pb-16 px-container-margin">
         <View className="mb-xs items-center">
           <AppText weight="bold" className="text-2xl text-on-surface mb-1">
-            Aperçu de la carte d'élève
+            {t.idCard.previewTitle}
           </AppText>
           <AppText className="text-base text-on-surface-variant text-center max-w-[280px]">
-            Assurez-vous que le code QR est bien visible pour le scan quotidien.
+            {t.idCard.previewSubtitle}
           </AppText>
         </View>
 
@@ -53,12 +55,12 @@ export default function IDCardPage() {
 
         <View className="mt-sm flex-row gap-sm">
           <PrimaryButton
-            label="Partager la carte"
+            label={t.idCard.share}
             icon="ios-share"
             onPress={handleShare}
             className="px-6"
           />
-          <OutlineButton label="Modifier" icon="edit" className="px-6" />
+          <OutlineButton label={t.idCard.edit} icon="edit" className="px-6" />
         </View>
       </ScrollView>
     </View>

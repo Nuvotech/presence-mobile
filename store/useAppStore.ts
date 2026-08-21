@@ -13,6 +13,8 @@ import {
   markAttendance as markAttendanceRequest,
 } from "../lib/sessions";
 
+export type Language = "en" | "fr";
+
 export type AttendanceRecord = { present: boolean; absent?: boolean; time?: string };
 
 export type ClassSession = {
@@ -30,6 +32,7 @@ type AppState = {
   authUser: AuthUser | null;
   activeSubjectCode: string | null;
   activeSessionId: string | null;
+  language: Language;
   sessions: ClassSession[];
   classes: ClassInfo[];
   classesLoading: boolean;
@@ -41,6 +44,7 @@ type AppState = {
   setAuthUser: (authUser: AuthUser | null) => void;
   setActiveSubject: (code: string) => void;
   setActiveSession: (sessionId: string) => void;
+  setLanguage: (language: Language) => void;
   logout: () => void;
   fetchClasses: () => Promise<void>;
   fetchStudentsForClass: (classId: string, force?: boolean) => Promise<void>;
@@ -73,12 +77,14 @@ export const useAppStore = create<AppState>()(
       | "activeSubjectCode"
       | "activeSessionId"
       | "studentsByClass"
+      | "language"
     >
   >(
     (set, get) => ({
       authUser: null,
       activeSubjectCode: null,
       activeSessionId: null,
+      language: "fr",
 
       sessions: [],
       classes: [],
@@ -100,6 +106,8 @@ export const useAppStore = create<AppState>()(
       setActiveSubject: (code) => set({ activeSubjectCode: code }),
 
       setActiveSession: (sessionId) => set({ activeSessionId: sessionId }),
+
+      setLanguage: (language) => set({ language }),
 
       logout: () => set({ authUser: null, activeSessionId: null }),
 
@@ -291,6 +299,7 @@ export const useAppStore = create<AppState>()(
         activeSubjectCode: state.activeSubjectCode,
         activeSessionId: state.activeSessionId,
         studentsByClass: state.studentsByClass,
+        language: state.language,
       }),
     },
   ),
