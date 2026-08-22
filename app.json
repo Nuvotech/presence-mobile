@@ -51,7 +51,8 @@
           "photosPermission": "Present needs photo library access to upload a student photo."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "router": {},

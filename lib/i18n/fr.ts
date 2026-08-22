@@ -33,6 +33,8 @@ const fr: TranslationDictionary = {
     headerTitle: 'Accueil',
     today: "Aujourd'hui",
     noSessionsToday: "Aucune classe enregistrée aujourd'hui. Scannez une classe pour commencer.",
+    noSessionsOnDate: 'Aucune classe enregistrée à cette date.',
+    selectDateLabel: 'Sélectionner une date',
     scanClass: 'Scanner une classe',
     chooseClass: 'Choisir une classe',
     historyButton: 'Historique',

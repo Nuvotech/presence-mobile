@@ -31,6 +31,8 @@ export type TranslationDictionary = {
     headerTitle: string;
     today: string;
     noSessionsToday: string;
+    noSessionsOnDate: string;
+    selectDateLabel: string;
     scanClass: string;
     chooseClass: string;
     historyButton: string;
