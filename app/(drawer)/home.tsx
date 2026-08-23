@@ -152,6 +152,14 @@ export default function HomePage() {
             >
               {authUser?.email}
             </AppText>
+            {authUser?.school && (
+              <AppText
+                className="text-xs text-primary mt-0.5"
+                numberOfLines={1}
+              >
+                {authUser.school.name}
+              </AppText>
+            )}
           </View>
           <View className="px-2 py-0.5 bg-secondary-container rounded">
             <AppText

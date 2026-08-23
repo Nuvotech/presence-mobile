@@ -5,6 +5,7 @@ export type AuthUser = {
   name: string;
   email: string;
   role: "teacher" | "admin";
+  school?: { id: number; name: string } | null;
 };
 
 type ApiEnvelope<T> = {
