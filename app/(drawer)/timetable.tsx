@@ -67,6 +67,9 @@ function DaySection({
                 <AppText weight="bold" className={accent.onText} numberOfLines={1}>
                   {classInfo?.name ?? slot.classId}
                 </AppText>
+                <AppText className={`text-xs ${accent.onText} opacity-75 mt-0.5`} numberOfLines={1}>
+                  {slot.subject}
+                </AppText>
               </View>
               <View className="items-end">
                 <AppText weight="bold" className={`text-sm ${accent.onText}`}>

@@ -54,31 +54,31 @@ const buildRoster = (seeds: StudentSeed[]): RosterStudent[] =>
     guardianContact: `guardian.${seed.id}@example.org`,
   }));
 
-export type TimetableSlot = { classId: string; start: string; end: string };
+export type TimetableSlot = { classId: string; subject: string; start: string; end: string };
 
 // Keyed by JS day-of-week (0 = Sunday .. 6 = Saturday).
 export const MOCK_TIMETABLE: Record<number, TimetableSlot[]> = {
   0: [],
   1: [
-    { classId: "1", start: "08:00", end: "09:00" },
-    { classId: "2", start: "09:15", end: "10:15" },
-    { classId: "3", start: "10:30", end: "11:30" },
+    { classId: "1", subject: "Français", start: "08:00", end: "09:00" },
+    { classId: "2", subject: "Mathématiques", start: "09:15", end: "10:15" },
+    { classId: "3", subject: "Anglais", start: "10:30", end: "11:30" },
   ],
   2: [
-    { classId: "3", start: "08:00", end: "09:00" },
-    { classId: "1", start: "09:15", end: "10:15" },
+    { classId: "3", subject: "Sciences", start: "08:00", end: "09:00" },
+    { classId: "1", subject: "Histoire-Géographie", start: "09:15", end: "10:15" },
   ],
-  3: [{ classId: "2", start: "08:00", end: "09:00" }],
+  3: [{ classId: "2", subject: "Français", start: "08:00", end: "09:00" }],
   4: [
-    { classId: "1", start: "08:00", end: "09:00" },
-    { classId: "3", start: "09:15", end: "10:15" },
-    { classId: "2", start: "10:30", end: "11:30" },
+    { classId: "1", subject: "Mathématiques", start: "08:00", end: "09:00" },
+    { classId: "3", subject: "Français", start: "09:15", end: "10:15" },
+    { classId: "2", subject: "Éducation Physique", start: "10:30", end: "11:30" },
   ],
   5: [
-    { classId: "3", start: "08:00", end: "09:00" },
-    { classId: "1", start: "09:15", end: "10:15" },
+    { classId: "3", subject: "Anglais", start: "08:00", end: "09:00" },
+    { classId: "1", subject: "Sciences", start: "09:15", end: "10:15" },
   ],
-  6: [],
+  6: [{ classId: "1", subject: "Anglais", start: "12:00", end: "14:00" }],
 };
 
 export const MOCK_STUDENTS: Record<string, RosterStudent[]> = {
