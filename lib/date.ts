@@ -6,3 +6,8 @@ export const formatDisplayDate = (isoDate: string) => {
 };
 
 export const isToday = (isoDate: string) => isoDate === todayStr();
+
+export const formatWeekdayDate = (isoDate: string) => {
+  const date = new Date(`${isoDate}T00:00:00`);
+  return date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+};

@@ -1,23 +1,16 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 import { Header } from '../../components/Header';
 import { AppText } from '../../components/AppText';
+import { ScanFrame } from '../../components/ScanFrame';
 import { colors } from '../../theme/tokens';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../lib/i18n/useTranslation';
 import { scanStudent } from '../../lib/sessions';
-
-const FRAME_SIZE = 256;
 
 const formatTime = (iso: string | null) =>
   new Date(iso ?? Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -25,27 +18,19 @@ const formatTime = (iso: string | null) =>
 export default function ScannerPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const session = useAppStore((s) => s.activeSession());
   const markStudentPresent = useAppStore((s) => s.markStudentPresent);
   const ensureSessionOpen = useAppStore((s) => s.ensureSessionOpen);
   const classes = useAppStore((s) => s.classes);
   const studentsByClass = useAppStore((s) => s.studentsByClass);
-  const scanLineY = useSharedValue(0);
   const busyRef = useRef(false);
 
   const classInfo = session ? classes.find((c) => c.id === session.classId) : undefined;
   const roster = session ? (studentsByClass[session.classId] ?? []) : [];
   const presentCount = session ? Object.values(session.attendance).filter((a) => a.present).length : 0;
   const total = roster.length;
-
-  const scanLineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: scanLineY.value }],
-  }));
-
-  useEffect(() => {
-    scanLineY.value = withRepeat(withTiming(FRAME_SIZE, { duration: 2000, easing: Easing.linear }), -1, false);
-  }, [scanLineY]);
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
@@ -105,85 +90,100 @@ export default function ScannerPage() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header title={t.scanner.headerTitle} backButton />
-      <View className="flex-1 bg-black items-center justify-center relative overflow-hidden">
-        {permission?.granted ? (
-          <CameraView
-            style={{ position: 'absolute', inset: 0 }}
-            facing="back"
-            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            onBarcodeScanned={handleBarcodeScanned}
-          />
-        ) : (
-          <View className="absolute inset-0 bg-[#0a0a0a] items-center justify-center opacity-60">
-            <MaterialIcons name="qr-code-scanner" size={140} color={colors.surfaceVariant} />
-          </View>
-        )}
+      {classInfo ? (
+        <View className="flex-1 bg-primary relative overflow-hidden">
+          {permission?.granted && (
+            <CameraView
+              style={{ position: 'absolute', inset: 0 }}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+              onBarcodeScanned={handleBarcodeScanned}
+            />
+          )}
 
-        {!permission?.granted && (
-          <View className="absolute inset-0 items-center justify-center px-container-margin" pointerEvents="box-none">
+          <View style={{ paddingTop: insets.top }} className="px-container-margin pt-sm pb-2 flex-row items-center gap-sm">
             <Pressable
-              onPress={requestPermission}
-              className="bg-white/10 px-4 py-3 rounded-xl">
-              <AppText className="text-white text-sm text-center">
-                {permission && !permission.canAskAgain
-                  ? t.common.cameraDeniedMessage
-                  : t.common.cameraPromptMessage}
+              onPress={() => router.back()}
+              className="w-9 h-9 rounded-full bg-white/15 items-center justify-center">
+              <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
+            </Pressable>
+            <AppText weight="extrabold" className="text-lg text-white flex-1" numberOfLines={1}>
+              {t.scanner.scanningClass(classInfo.name)}
+            </AppText>
+            <View className="bg-tertiary-fixed px-3 py-1.5 rounded-md">
+              <AppText weight="extrabold" className="text-xs text-on-tertiary-fixed-variant">
+                {presentCount}/{total}
+              </AppText>
+            </View>
+          </View>
+
+          <View className="flex-1 items-center justify-center gap-md px-container-margin">
+            <ScanFrame />
+
+            <View className="items-center gap-1 mt-2">
+              <AppText weight="extrabold" className="text-lg text-white">
+                {t.scanner.holdSteady}
+              </AppText>
+              <AppText className="text-sm text-white/60 text-center" style={{ maxWidth: 250 }}>
+                {t.scanner.holdSteadySubtitle}
+              </AppText>
+            </View>
+
+            {!permission?.granted && (
+              <Pressable onPress={requestPermission} className="bg-white/10 px-4 py-3 rounded-xl mt-2">
+                <AppText className="text-white text-sm text-center">
+                  {permission && !permission.canAskAgain
+                    ? t.common.cameraDeniedMessage
+                    : t.common.cameraPromptMessage}
+                </AppText>
+              </Pressable>
+            )}
+          </View>
+
+          <View style={{ paddingBottom: insets.bottom + 16 }} className="px-container-margin gap-sm">
+            <View className="bg-white/10 p-sm rounded-lg flex-row items-center justify-between">
+              <View className="flex-row items-center gap-sm">
+                <View className="w-11 h-11 rounded-full bg-white/15 items-center justify-center">
+                  <MaterialIcons name="group" size={20} color="#ffffff" />
+                </View>
+                <View>
+                  <AppText weight="bold" className="text-white">
+                    {t.scanner.studentsScannedCount(presentCount)}
+                  </AppText>
+                  <AppText className="text-xs text-white/60">{t.scanner.scannedToday}</AppText>
+                </View>
+              </View>
+              <View className="items-end">
+                <AppText className="text-xs text-white/60">{t.scanner.goalLabel(total)}</AppText>
+                <View className="w-24 h-2 bg-white/15 rounded-full mt-2 overflow-hidden">
+                  <View
+                    className="h-full bg-accent"
+                    style={{ width: `${total ? Math.round((presentCount / total) * 100) : 0}%` }}
+                  />
+                </View>
+              </View>
+            </View>
+            <Pressable
+              onPress={() => router.push('/register')}
+              className="w-full bg-tertiary-fixed h-12 rounded-lg flex-row items-center justify-center gap-2 active:opacity-90">
+              <MaterialIcons name="list-alt" size={20} color={colors.onTertiaryFixedVariant} />
+              <AppText weight="bold" className="text-on-tertiary-fixed-variant">
+                {t.scanner.viewRegister}
               </AppText>
             </Pressable>
           </View>
-        )}
-
-        <View className="w-64 h-64 relative z-10 rounded-lg overflow-hidden" style={{ borderWidth: 2, borderColor: 'white' }}>
-          <Animated.View
-            className="h-0.5 bg-white absolute w-full left-0 top-0"
-            style={[scanLineStyle, { shadowColor: '#fff', shadowOpacity: 1, shadowRadius: 10 }]}
-          />
-          <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white" />
-          <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white" />
-          <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white" />
-          <View className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white" />
         </View>
-
-        <View className="absolute bottom-12 self-center z-20 px-container-margin">
-          <AppText weight="medium" className="text-sm text-white bg-black/40 py-2 px-4 rounded-full overflow-hidden">
-            {t.scanner.scanHint}
-          </AppText>
-        </View>
-      </View>
-
-      <View className="bg-surface p-container-margin gap-sm">
-        <View className="bg-surface-container-lowest border border-outline-variant p-sm rounded-xl flex-row items-center justify-between">
-          <View className="flex-row items-center gap-sm">
-            <View className="w-12 h-12 rounded-[999px] bg-secondary-container items-center justify-center">
-              <MaterialIcons name="group" size={22} color={colors.onSecondaryContainer} />
-            </View>
-            <View>
-              <AppText weight="bold" className="text-primary">
-                {t.scanner.studentsScannedCount(presentCount)}
-              </AppText>
-              <AppText className="text-sm text-on-surface-variant">{t.scanner.scannedToday}</AppText>
-            </View>
+      ) : (
+        <>
+          <Header title={t.scanner.headerTitle} backButton />
+          <View className="flex-1 items-center justify-center px-container-margin gap-md">
+            <MaterialIcons name="assignment-late" size={48} color={colors.onSurfaceVariant} />
+            <AppText className="text-base text-on-surface-variant text-center">
+              {t.register.noActiveClass}
+            </AppText>
           </View>
-          <View className="items-end">
-            <AppText className="text-sm text-on-primary-container">{t.scanner.goalLabel(total)}</AppText>
-            <View className="w-24 h-2 bg-surface-container-high rounded-full mt-2 overflow-hidden">
-              <View
-                className="h-full bg-primary"
-                style={{ width: `${total ? Math.round((presentCount / total) * 100) : 0}%` }}
-              />
-            </View>
-          </View>
-        </View>
-        <Pressable
-          onPress={() => router.push('/register')}
-          className="w-full bg-primary h-12 rounded-xl flex-row items-center justify-center gap-2 active:opacity-90">
-          <MaterialIcons name="list-alt" size={20} color={colors.onPrimary} />
-          <AppText weight="bold" className="text-on-primary">
-            {t.scanner.viewRegister}
-          </AppText>
-        </Pressable>
-      </View>
+        </>
+      )}
     </View>
   );
 }

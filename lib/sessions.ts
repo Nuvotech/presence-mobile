@@ -1,4 +1,7 @@
 import { api } from "./api";
+import { USE_MOCK_DATA } from "./mockConfig";
+import { mockOpenSession, mockMarkAttendance, mockScanStudent } from "./mock/db";
+import { mockDelay } from "./mock/delay";
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -9,18 +12,18 @@ type ApiEnvelope<T> = {
 type ApiSession = {
   id: number;
   class_id: number;
-  subject_id: number;
   teacher_id: number;
   date: string;
 };
 
-export async function openSession(
-  classId: string,
-  subjectId: string,
-): Promise<number> {
+export async function openSession(classId: string): Promise<number> {
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    return mockOpenSession(classId);
+  }
+
   const response = await api.post<ApiEnvelope<ApiSession>>("/sessions", {
     class_id: Number(classId),
-    subject_id: Number(subjectId),
   });
   return response.data.data.id;
 }
@@ -32,6 +35,12 @@ export async function markAttendance(
   studentId: number,
   status: AttendanceStatus,
 ): Promise<void> {
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    mockMarkAttendance(sessionId, studentId, status);
+    return;
+  }
+
   await api.patch(`/sessions/${sessionId}/attendance/${studentId}`, {
     status,
   });
@@ -66,6 +75,11 @@ export async function scanStudent(
   sessionId: number,
   qrToken: string,
 ): Promise<ScanResult> {
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    return mockScanStudent(sessionId, qrToken);
+  }
+
   const response = await api.post<ApiEnvelope<ScanResult>>(
     `/sessions/${sessionId}/scan`,
     { qr_token: qrToken },

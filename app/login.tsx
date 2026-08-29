@@ -1,17 +1,11 @@
 import { useState } from "react";
-import { View, Pressable, KeyboardAvoidingView, Platform } from "react-native";
+import { View, TextInput, Pressable, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { AppText } from "../components/AppText";
-import { TextField } from "../components/TextField";
+import { PrimaryButton } from "../components/Buttons";
 import { colors } from "../theme/tokens";
 import { logoUri } from "../data/students";
 import { useAppStore } from "../store/useAppStore";
@@ -24,21 +18,13 @@ export default function LoginPage() {
   const setAuthUser = useAppStore((s) => s.setAuthUser);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const spin = useSharedValue(0);
-
-  const spinnerStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${spin.value}deg` }],
-  }));
 
   const handleLogin = async () => {
     setError(null);
     setIsLoading(true);
-    spin.value = withRepeat(
-      withTiming(360, { duration: 800, easing: Easing.linear }),
-      -1,
-    );
 
     try {
       await apiLogin(email.trim(), password);
@@ -57,7 +43,6 @@ export default function LoginPage() {
         setError(t.login.genericError);
       }
     } finally {
-      spin.value = 0;
       setIsLoading(false);
     }
   };
@@ -66,74 +51,98 @@ export default function LoginPage() {
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 items-center justify-center px-container-margin"
+        className="flex-1"
       >
-        <View className="w-full max-w-[400px] bg-surface-container-lowest border border-surface-variant rounded-xl p-lg items-center">
-          <View className="items-center mb-xl">
+        <View className="flex-1 px-container-margin pt-md pb-lg">
+          <View className="flex-1 min-h-0" style={{ maxHeight: 70 }} />
+
+          <View className="flex-row items-center gap-sm">
             <Animated.Image
               source={{ uri: logoUri }}
-              className="h-16 w-16 mb-4"
+              className="h-16 w-16 rounded-xl"
             />
-            <AppText
-              weight="bold"
-              className="text-2xl text-primary tracking-tight"
-            >
-              {t.login.wordmark}
-            </AppText>
-            <AppText className="text-base text-on-surface-variant mt-1">
-              {t.login.subtitle}
-            </AppText>
+            <View>
+              <AppText weight="extrabold" className="text-lg text-on-surface tracking-tight">
+                {t.login.wordmark}
+              </AppText>
+              <AppText className="text-xs text-on-surface-variant mt-0.5">
+                {t.login.subtitle}
+              </AppText>
+            </View>
           </View>
 
-          <View className="w-full gap-md">
-            <TextField
-              label={t.login.emailLabel}
-              icon="mail"
-              placeholder={t.login.emailPlaceholder}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            <TextField
-              label={t.login.passwordLabel}
-              icon="lock"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+          <AppText weight="bold" className="text-xs text-on-tertiary-fixed-variant tracking-widest mt-8">
+            {t.login.eyebrow}
+          </AppText>
+          <AppText weight="extrabold" className="text-3xl text-on-surface tracking-tight leading-9 mt-2">
+            {t.login.headline}
+          </AppText>
+          <AppText className="text-sm text-on-surface-variant mt-2 max-w-[280px]">
+            {t.login.tagline}
+          </AppText>
 
-            {error && (
-              <AppText className="text-sm text-error">{error}</AppText>
-            )}
-
-            <Pressable
-              onPress={handleLogin}
-              disabled={isLoading}
-              className="w-full h-12 bg-primary rounded-lg items-center justify-center flex-row active:opacity-90"
-            >
-              {isLoading ? (
-                <Animated.View style={spinnerStyle}>
-                  <MaterialIcons
-                    name="sync"
-                    size={22}
-                    color={colors.onPrimary}
-                  />
-                </Animated.View>
-              ) : (
-                <AppText weight="bold" className="text-on-primary text-base">
-                  {t.login.submit}
+          <View className="gap-2.5 mt-6">
+            <View className="rounded-lg bg-surface-container flex-row items-center gap-3 px-4 py-3">
+              <MaterialIcons name="mail-outline" size={20} color={colors.outline} />
+              <View className="flex-1">
+                <AppText weight="bold" className="text-[10px] text-on-surface-variant tracking-widest">
+                  {t.login.emailLabel.toUpperCase()}
                 </AppText>
-              )}
-            </Pressable>
+                <TextInput
+                  className="text-[14.5px] font-archivo-bold text-on-surface -mt-0.5 p-0"
+                  placeholder={t.login.emailPlaceholder}
+                  placeholderTextColor={colors.outline}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+            </View>
+
+            <View className="rounded-lg bg-surface-container flex-row items-center gap-3 px-4 py-3">
+              <MaterialIcons name="lock-outline" size={20} color={colors.outline} />
+              <View className="flex-1">
+                <AppText weight="bold" className="text-[10px] text-on-surface-variant tracking-widest">
+                  {t.login.passwordLabel.toUpperCase()}
+                </AppText>
+                <TextInput
+                  className="text-base font-archivo-extrabold text-on-surface -mt-0.5 p-0"
+                  style={{ letterSpacing: showPassword ? 0 : 3 }}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              </View>
+              <Pressable onPress={() => setShowPassword((v) => !v)}>
+                <AppText weight="extrabold" className="text-xs text-on-tertiary-fixed-variant">
+                  {showPassword ? t.login.hidePassword : t.login.showPassword}
+                </AppText>
+              </Pressable>
+            </View>
+
+            {error && <AppText className="text-sm text-error">{error}</AppText>}
+
+            <PrimaryButton
+              label={t.login.submit}
+              onPress={handleLogin}
+              loading={isLoading}
+              className="w-full mt-1"
+            />
           </View>
 
-          <AppText
-            weight="medium"
-            className="mt-lg text-sm text-on-surface-variant underline"
-          >
+          <AppText weight="medium" className="mt-md text-sm text-on-surface-variant text-center underline">
             {t.login.forgotPassword}
           </AppText>
+
+          <View className="flex-1 min-h-2.5" />
+
+          <View className="flex-row gap-2">
+            <View className="flex-1 h-1.5 rounded-full bg-secondary-container" />
+            <View className="flex-1 h-1.5 rounded-full bg-tertiary-fixed" />
+            <View className="flex-1 h-1.5 rounded-full bg-avatar-gold" />
+            <View className="flex-1 h-1.5 rounded-full bg-avatar-sky" />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

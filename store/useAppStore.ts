@@ -2,12 +2,10 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ClassInfo, RosterStudent } from "../data/classes";
-import type { Subject } from "../data/subjects";
 import { todayStr } from "../lib/date";
 import type { AuthUser } from "../lib/auth";
 import { fetchClasses as fetchClassesRequest } from "../lib/classes";
 import { fetchStudentsForClass as fetchStudentsForClassRequest } from "../lib/students";
-import { fetchMySubjects } from "../lib/subjects";
 import {
   openSession,
   markAttendance as markAttendanceRequest,
@@ -15,14 +13,13 @@ import {
 
 export type Language = "en" | "fr";
 
-export type AttendanceRecord = { present: boolean; absent?: boolean; time?: string };
+export type AttendanceRecord = { present: boolean; time?: string };
 
 export type ClassSession = {
   id: string;
   classId: string;
   className: string;
   date: string;
-  subjectCode: string;
   attendance: Record<number, AttendanceRecord>;
   remoteId: number | null;
   submittedAt: string | null;
@@ -30,7 +27,6 @@ export type ClassSession = {
 
 type AppState = {
   authUser: AuthUser | null;
-  activeSubjectCode: string | null;
   activeSessionId: string | null;
   language: Language;
   sessions: ClassSession[];
@@ -38,27 +34,20 @@ type AppState = {
   classesLoading: boolean;
   studentsByClass: Record<string, RosterStudent[]>;
   studentsLoadingClassId: string | null;
-  subjects: Subject[];
-  subjectsLoading: boolean;
   activeSession: () => ClassSession | undefined;
   setAuthUser: (authUser: AuthUser | null) => void;
-  setActiveSubject: (code: string) => void;
   setActiveSession: (sessionId: string) => void;
   setLanguage: (language: Language) => void;
   logout: () => void;
   fetchClasses: () => Promise<void>;
   fetchStudentsForClass: (classId: string, force?: boolean) => Promise<void>;
-  fetchSubjects: () => Promise<void>;
-  checkInClass: (
-    classInfo: ClassInfo,
-    subjectCode: string,
-  ) => ClassSession | undefined;
+  checkInClass: (classInfo: ClassInfo) => ClassSession | undefined;
   markStudentPresent: (
     sessionId: string,
     studentId: number,
     time: string,
   ) => void;
-  markStudentAbsent: (sessionId: string, studentId: number) => void;
+  unmarkStudent: (sessionId: string, studentId: number) => void;
   ensureSessionOpen: (sessionId: string) => Promise<number | null>;
   submitRegister: (
     sessionId: string,
@@ -74,7 +63,6 @@ export const useAppStore = create<AppState>()(
       AppState,
       | "sessions"
       | "authUser"
-      | "activeSubjectCode"
       | "activeSessionId"
       | "studentsByClass"
       | "language"
@@ -82,7 +70,6 @@ export const useAppStore = create<AppState>()(
   >(
     (set, get) => ({
       authUser: null,
-      activeSubjectCode: null,
       activeSessionId: null,
       language: "fr",
 
@@ -91,8 +78,6 @@ export const useAppStore = create<AppState>()(
       classesLoading: false,
       studentsByClass: {},
       studentsLoadingClassId: null,
-      subjects: [],
-      subjectsLoading: false,
 
       activeSession: () => {
         const session = get().sessions.find(
@@ -102,8 +87,6 @@ export const useAppStore = create<AppState>()(
       },
 
       setAuthUser: (authUser) => set({ authUser }),
-
-      setActiveSubject: (code) => set({ activeSubjectCode: code }),
 
       setActiveSession: (sessionId) => set({ activeSessionId: sessionId }),
 
@@ -135,48 +118,22 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      fetchSubjects: async () => {
-        set({ subjectsLoading: true });
-        try {
-          const subjects = await fetchMySubjects();
-          set((state) => ({
-            subjects,
-            // A previously-selected subject may no longer be assigned to
-            // this teacher (or its id may have shifted) — don't keep
-            // auto-selecting a subject that's no longer valid.
-            activeSubjectCode: subjects.some(
-              (subject) => subject.code === state.activeSubjectCode,
-            )
-              ? state.activeSubjectCode
-              : null,
-          }));
-        } finally {
-          set({ subjectsLoading: false });
-        }
-      },
-
-      checkInClass: (classInfo, subjectCode) => {
-        if (!subjectCode) return undefined;
-
+      checkInClass: (classInfo) => {
         const today = todayStr();
         const existing = get().sessions.find(
-          (s) =>
-            s.classId === classInfo.id &&
-            s.subjectCode === subjectCode &&
-            s.date === today,
+          (s) => s.classId === classInfo.id && s.date === today,
         );
         if (existing) {
           set({ activeSessionId: existing.id });
           return existing;
         }
 
-        const sessionId = `${classInfo.id}-${subjectCode}-${today}`;
+        const sessionId = `${classInfo.id}-${today}`;
         const session: ClassSession = {
           id: sessionId,
           classId: classInfo.id,
           className: classInfo.name,
           date: today,
-          subjectCode,
           attendance: {},
           remoteId: null,
           submittedAt: null,
@@ -186,7 +143,7 @@ export const useAppStore = create<AppState>()(
           activeSessionId: sessionId,
         }));
 
-        openSession(classInfo.id, subjectCode)
+        openSession(classInfo.id)
           .then((remoteId) => {
             set((state) => ({
               sessions: state.sessions.map((s) =>
@@ -207,7 +164,7 @@ export const useAppStore = create<AppState>()(
         if (session.remoteId !== null) return session.remoteId;
 
         try {
-          const remoteId = await openSession(session.classId, session.subjectCode);
+          const remoteId = await openSession(session.classId);
           set((state) => ({
             sessions: state.sessions.map((s) =>
               s.id === sessionId ? { ...s, remoteId } : s,
@@ -226,17 +183,14 @@ export const useAppStore = create<AppState>()(
         const remoteId = await get().ensureSessionOpen(sessionId);
         if (remoteId === null) return { success: false, failedCount: 0 };
 
-        const entries = Object.entries(session.attendance) as [
-          string,
-          AttendanceRecord,
-        ][];
+        const roster = get().studentsByClass[session.classId] ?? [];
 
         const results = await Promise.allSettled(
-          entries.map(([studentId, record]) =>
+          roster.map((student) =>
             markAttendanceRequest(
               remoteId,
-              Number(studentId),
-              record.present ? "present" : "absent",
+              student.id,
+              session.attendance[student.id]?.present ? "present" : "absent",
             ),
           ),
         );
@@ -273,20 +227,14 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      markStudentAbsent: (sessionId, studentId) => {
+      unmarkStudent: (sessionId, studentId) => {
         set((state) => ({
-          sessions: state.sessions.map((s) =>
-            s.id === sessionId
-              ? {
-                  ...s,
-                  attendance: {
-                    ...s.attendance,
-                    [studentId]: { present: false, absent: true },
-                  },
-                  submittedAt: null,
-                }
-              : s,
-          ),
+          sessions: state.sessions.map((s) => {
+            if (s.id !== sessionId) return s;
+            const attendance = { ...s.attendance };
+            delete attendance[studentId];
+            return { ...s, attendance, submittedAt: null };
+          }),
         }));
       },
     }),
@@ -296,7 +244,6 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         sessions: state.sessions,
         authUser: state.authUser,
-        activeSubjectCode: state.activeSubjectCode,
         activeSessionId: state.activeSessionId,
         studentsByClass: state.studentsByClass,
         language: state.language,

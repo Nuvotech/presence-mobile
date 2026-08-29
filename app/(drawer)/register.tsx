@@ -1,32 +1,32 @@
 import { useState } from "react";
 import { View, Pressable, TextInput, ScrollView, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Header } from "../../components/Header";
 import { AppText } from "../../components/AppText";
-import {
-  PresentStudentRow,
-  AbsentStudentRow,
-} from "../../components/StudentListItem";
+import { StudentRow } from "../../components/StudentListItem";
 import { PrimaryButton } from "../../components/Buttons";
+import { SegmentedControl } from "../../components/SegmentedControl";
+import { RegisterHero } from "../../components/RegisterHero";
 import { colors } from "../../theme/tokens";
 import { useAppStore } from "../../store/useAppStore";
 import { useTranslation } from "../../lib/i18n/useTranslation";
 import { formatDisplayDate } from "../../lib/date";
 
-type Tab = "present" | "absent";
+type Tab = "present" | "waiting";
 
 export default function AttendanceRegister() {
   const [tab, setTab] = useState<Tab>("present");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const session = useAppStore((s) => s.activeSession());
   const markStudentPresent = useAppStore((s) => s.markStudentPresent);
-  const markStudentAbsent = useAppStore((s) => s.markStudentAbsent);
+  const unmarkStudent = useAppStore((s) => s.unmarkStudent);
   const submitRegister = useAppStore((s) => s.submitRegister);
   const classes = useAppStore((s) => s.classes);
-  const subjects = useAppStore((s) => s.subjects);
   const studentsByClass = useAppStore((s) => s.studentsByClass);
   const studentsLoadingClassId = useAppStore((s) => s.studentsLoadingClassId);
 
@@ -60,12 +60,11 @@ export default function AttendanceRegister() {
   const presentStudents = roster.filter(
     (s) => session.attendance[s.id]?.present,
   );
-  const absentStudents = roster.filter(
+  const waitingStudents = roster.filter(
     (s) => !session.attendance[s.id]?.present,
   );
   const total = roster.length;
   const rosterLoading = studentsLoadingClassId === session.classId;
-  const isComplete = total > 0 && roster.every((s) => session.attendance[s.id]);
   const isSubmitted = session.submittedAt !== null;
 
   const handleSubmit = async () => {
@@ -73,7 +72,7 @@ export default function AttendanceRegister() {
     try {
       const result = await submitRegister(session.id);
       if (result.success) {
-        Alert.alert(t.register.submitSuccessTitle, t.register.submitSuccessMessage);
+        router.push({ pathname: "/register-submitted", params: { sessionId: session.id } });
       } else {
         Alert.alert(
           t.register.submitFailTitle,
@@ -87,50 +86,22 @@ export default function AttendanceRegister() {
     }
   };
 
+  const visibleStudents = tab === "present" ? presentStudents : waitingStudents;
+
   return (
     <View className="flex-1 bg-background">
-      <Header title={t.register.headerTitle} backButton />
-      <ScrollView className="flex-1" contentContainerClassName={isComplete ? "pb-40" : "pb-24"}>
-        <View className="px-container-margin pt-lg pb-sm">
-          <View className="flex-row justify-between items-start mb-1">
-            <View className="flex-1 pr-2">
-              <AppText
-                weight="medium"
-                className="text-on-surface-variant text-xs uppercase tracking-wider mb-1"
-              >
-                {t.register.attendanceSheet}
-              </AppText>
-              <AppText weight="bold" className="text-2xl text-on-surface">
-                {classInfo.name}
-              </AppText>
-              <AppText className="text-base text-on-surface-variant mt-1">
-                {formatDisplayDate(session.date)}
-              </AppText>
-              <View className="mt-2 self-start bg-primary px-3 py-1 rounded-[999px] flex-row items-center gap-1.5">
-                <MaterialIcons
-                  name="menu-book"
-                  size={14}
-                  color={colors.onPrimary}
-                />
-                <AppText
-                  weight="bold"
-                  className="text-xs text-on-primary"
-                  numberOfLines={1}
-                >
-                  {subjects.find((sub) => sub.code === session.subjectCode)?.label ?? session.subjectCode}
-                </AppText>
-              </View>
-            </View>
-            <View className="bg-primary px-3 py-1.5 rounded-[999px] flex-row items-center gap-2 shrink-0">
-              <AppText weight="bold" className="text-on-primary">
-                {presentStudents.length}/{total}
-              </AppText>
-              <AppText className="text-xs text-on-primary opacity-80">
-                {t.common.presentSuffix}
-              </AppText>
-            </View>
-          </View>
-        </View>
+      <ScrollView
+        className="flex-1"
+        style={{ paddingTop: insets.top }}
+        contentContainerClassName="pb-40">
+        <RegisterHero
+          className={classInfo.name}
+          present={presentStudents.length}
+          total={total}
+          dateLabel={formatDisplayDate(session.date)}
+          presentOfTotal={t.register.presentOfTotal}
+          onBack={() => router.back()}
+        />
 
         <View className="pt-1 pb-sm px-container-margin">
           <View className="relative justify-center mb-sm">
@@ -141,39 +112,19 @@ export default function AttendanceRegister() {
               style={{ position: "absolute", left: 12, zIndex: 1 }}
             />
             <TextInput
-              className="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-xl font-hanken text-on-surface"
+              className="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant rounded-lg font-archivo text-on-surface"
               placeholder={t.register.searchPlaceholder}
               placeholderTextColor={colors.outline}
             />
           </View>
-          <View className="flex-row p-1 bg-surface-container rounded-xl">
-            <Pressable
-              onPress={() => setTab("present")}
-              className={`flex-1 py-2 items-center rounded-lg ${tab === "present" ? "bg-surface-container-lowest" : ""}`}
-            >
-              <AppText
-                weight="bold"
-                className={
-                  tab === "present" ? "text-primary" : "text-on-surface-variant"
-                }
-              >
-                {t.register.presentTab(presentStudents.length)}
-              </AppText>
-            </Pressable>
-            <Pressable
-              onPress={() => setTab("absent")}
-              className={`flex-1 py-2 items-center rounded-lg ${tab === "absent" ? "bg-surface-container-lowest" : ""}`}
-            >
-              <AppText
-                weight="bold"
-                className={
-                  tab === "absent" ? "text-primary" : "text-on-surface-variant"
-                }
-              >
-                {t.register.absentTab(absentStudents.length)}
-              </AppText>
-            </Pressable>
-          </View>
+          <SegmentedControl
+            segments={[
+              { key: "present", label: t.register.presentTab(presentStudents.length) },
+              { key: "waiting", label: t.register.waitingTab(waitingStudents.length) },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
         </View>
 
         <View className="px-container-margin gap-md mt-1">
@@ -182,23 +133,18 @@ export default function AttendanceRegister() {
               {t.register.loadingStudents}
             </AppText>
           )}
-          {tab === "present"
-            ? presentStudents.map((student) => (
-                <PresentStudentRow
-                  key={student.id}
-                  student={student}
-                  grade={classInfo.name}
-                  time={session.attendance[student.id]?.time}
-                />
-              ))
-            : absentStudents.map((student) => (
-                <AbsentStudentRow
-                  key={student.id}
-                  student={student}
-                  grade={classInfo.name}
-                  isAbsent={session.attendance[student.id]?.absent}
-                  onMarkPresent={() =>
-                    markStudentPresent(
+          {visibleStudents.map((student) => (
+            <StudentRow
+              key={student.id}
+              student={student}
+              classId={session.classId}
+              sessionId={session.id}
+              present={!!session.attendance[student.id]?.present}
+              time={session.attendance[student.id]?.time}
+              onToggle={() =>
+                session.attendance[student.id]?.present
+                  ? unmarkStudent(session.id, student.id)
+                  : markStudentPresent(
                       session.id,
                       student.id,
                       new Date().toLocaleTimeString("en-GB", {
@@ -206,17 +152,14 @@ export default function AttendanceRegister() {
                         minute: "2-digit",
                       }),
                     )
-                  }
-                  onMarkAbsent={() => markStudentAbsent(session.id, student.id)}
-                />
-              ))}
+              }
+            />
+          ))}
         </View>
       </ScrollView>
       <Pressable
         onPress={() => router.push("/scanner")}
-        className={`absolute right-6 w-14 h-14 bg-primary rounded-[999px] items-center justify-center active:opacity-90 ${
-          isComplete ? "bottom-24" : "bottom-6"
-        }`}
+        className="absolute right-6 bottom-24 w-14 h-14 bg-attendance-success rounded-full items-center justify-center active:opacity-90"
         style={{
           elevation: 4,
           shadowColor: "#000",
@@ -232,22 +175,20 @@ export default function AttendanceRegister() {
         />
       </Pressable>
 
-      {isComplete && (
-        <View className="absolute left-0 right-0 bottom-0 bg-surface border-t border-outline-variant p-container-margin">
-          <PrimaryButton
-            label={
-              submitting
-                ? t.register.submitting
-                : isSubmitted
-                  ? t.register.submittedUpdate
-                  : t.register.submitRegister
-            }
-            icon={isSubmitted ? "check-circle" : "cloud-upload"}
-            onPress={handleSubmit}
-            disabled={submitting}
-          />
-        </View>
-      )}
+      <View className="absolute left-0 right-0 bottom-0 bg-background p-container-margin">
+        <PrimaryButton
+          label={
+            submitting
+              ? t.register.submitting
+              : isSubmitted
+                ? t.register.submittedUpdate
+                : t.register.submitRegister
+          }
+          icon={isSubmitted ? "check-circle" : "cloud-upload"}
+          onPress={handleSubmit}
+          disabled={submitting}
+        />
+      </View>
     </View>
   );
 }

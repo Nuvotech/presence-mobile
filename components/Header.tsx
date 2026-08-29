@@ -26,14 +26,16 @@ export function Header({ title, backButton = false }: HeaderProps) {
       <View className="flex-row items-center justify-between px-container-margin h-16">
         <View className="flex-row items-center gap-2 flex-1">
           {backButton ? (
-            <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-surface-container">
-              <MaterialIcons name="arrow-back" size={24} color={colors.primary} />
+            <Pressable
+              onPress={() => router.back()}
+              className="w-10 h-10 rounded-full bg-surface-container items-center justify-center active:opacity-80">
+              <MaterialIcons name="arrow-back" size={22} color={colors.primary} />
             </Pressable>
           ) : (
             <Pressable
               onPress={() => navigation.openDrawer()}
-              className="p-2 -ml-2 rounded-full active:bg-surface-container">
-              <MaterialIcons name="menu" size={24} color={colors.primary} />
+              className="w-10 h-10 rounded-full bg-surface-container items-center justify-center active:opacity-80">
+              <MaterialIcons name="menu" size={22} color={colors.primary} />
             </Pressable>
           )}
           <AppText weight="bold" className="text-xl text-primary ml-2" numberOfLines={1}>
@@ -42,7 +44,7 @@ export function Header({ title, backButton = false }: HeaderProps) {
         </View>
         <Pressable
           onPress={() => router.push('/profile')}
-          className="w-10 h-10 rounded-[999px] bg-surface-container overflow-hidden border border-outline-variant active:opacity-80">
+          className="w-10 h-10 rounded-full bg-surface-container overflow-hidden active:opacity-80">
           <Image source={{ uri: avatarUri }} className="w-full h-full" />
         </Pressable>
       </View>

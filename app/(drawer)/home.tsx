@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   View,
-  Image,
   Pressable,
   ScrollView,
   Modal,
@@ -17,13 +16,12 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { Header } from "../../components/Header";
 import { AppText } from "../../components/AppText";
-import { PrimaryButton, OutlineButton } from "../../components/Buttons";
-import { SubjectPickerModal } from "../../components/SubjectPickerModal";
+import { ActionCard } from "../../components/ActionCard";
+import { SessionRow } from "../../components/SessionRow";
 import { colors } from "../../theme/tokens";
 import { useAppStore } from "../../store/useAppStore";
 import { useTranslation } from "../../lib/i18n/useTranslation";
-import { avatarUriFor } from "../../lib/avatar";
-import { todayStr, formatDisplayDate } from "../../lib/date";
+import { todayStr, formatDisplayDate, formatWeekdayDate } from "../../lib/date";
 import type { ClassInfo } from "../../data/classes";
 
 export default function HomePage() {
@@ -40,60 +38,31 @@ export default function HomePage() {
   const checkInClass = useAppStore((s) => s.checkInClass);
   const setActiveSession = useAppStore((s) => s.setActiveSession);
   const logout = useAppStore((s) => s.logout);
-  const activeSubjectCode = useAppStore((s) => s.activeSubjectCode);
-  const setActiveSubject = useAppStore((s) => s.setActiveSubject);
   const classes = useAppStore((s) => s.classes);
   const classesLoading = useAppStore((s) => s.classesLoading);
   const fetchClasses = useAppStore((s) => s.fetchClasses);
   const fetchStudentsForClass = useAppStore((s) => s.fetchStudentsForClass);
-  const subjects = useAppStore((s) => s.subjects);
-  const fetchSubjects = useAppStore((s) => s.fetchSubjects);
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [subjectPickerVisible, setSubjectPickerVisible] = useState(false);
-  const [pendingClass, setPendingClass] = useState<ClassInfo | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchClasses();
-    fetchSubjects();
-  }, [fetchClasses, fetchSubjects]);
+  }, [fetchClasses]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([fetchClasses(), fetchSubjects()]);
+      await fetchClasses();
     } finally {
       setRefreshing(false);
     }
   };
 
-  const finishCheckIn = (classInfo: ClassInfo, subjectCode: string) => {
-    checkInClass(classInfo, subjectCode);
-    fetchStudentsForClass(classInfo.id);
-    router.push("/register");
-  };
-
   const handleSelectClass = (classInfo: ClassInfo) => {
     setPickerVisible(false);
-    if (activeSubjectCode) {
-      finishCheckIn(classInfo, activeSubjectCode);
-      return;
-    }
-    if (subjects.length <= 1) {
-      finishCheckIn(classInfo, subjects[0]?.code ?? "");
-      return;
-    }
-    setPendingClass(classInfo);
-    setSubjectPickerVisible(true);
-  };
-
-  const handleSelectSubject = (code: string) => {
-    setActiveSubject(code);
-    setSubjectPickerVisible(false);
-    if (pendingClass) {
-      finishCheckIn(pendingClass, code);
-      setPendingClass(null);
-    }
+    checkInClass(classInfo);
+    fetchStudentsForClass(classInfo.id);
+    router.push("/register");
   };
 
   const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
@@ -131,47 +100,49 @@ export default function HomePage() {
           />
         }
       >
-        <View className="bg-surface-container-lowest border border-outline-variant rounded-xl p-sm flex-row items-center gap-sm custom-shadow">
-          <View className="w-12 h-12 rounded-[999px] overflow-hidden border border-outline-variant bg-surface-container">
-            <Image
-              source={{ uri: avatarUriFor(authUser?.name ?? "") }}
-              className="w-full h-full"
-            />
-          </View>
-          <View className="flex-1">
-            <AppText
-              weight="bold"
-              className="text-base text-on-surface"
-              numberOfLines={1}
-            >
-              {authUser?.name}
-            </AppText>
-            <AppText
-              className="text-xs text-on-surface-variant"
-              numberOfLines={1}
-            >
-              {authUser?.email}
-            </AppText>
-            {authUser?.school && (
-              <AppText
-                className="text-xs text-primary mt-0.5"
-                numberOfLines={1}
-              >
-                {authUser.school.name}
-              </AppText>
-            )}
-          </View>
-          <View className="px-2 py-0.5 bg-secondary-container rounded">
-            <AppText
-              weight="bold"
-              className="text-xs text-on-secondary-container"
-            >
-              {authUser?.role === "admin" ? t.common.roleAdmin : t.common.roleTeacher}
-            </AppText>
-          </View>
+        <AppText weight="extrabold" className="text-3xl text-on-surface">
+          {t.home.greeting(authUser?.name?.split(" ")[0] ?? "")} 👋
+        </AppText>
+        <AppText className="text-base text-on-surface-variant mt-1">
+          {formatWeekdayDate(selectedDate)} · {t.home.classesCount(sessionsForSelectedDate.length)}
+        </AppText>
+
+        <View className="mt-lg flex-row flex-wrap gap-sm">
+          <ActionCard
+            icon="qr-code-scanner"
+            accentIndex={1}
+            title={t.home.scanClass}
+            subtitle={t.home.scanClassSubtitle}
+            onPress={() => router.push("/class-scanner")}
+            className="flex-1 basis-[45%]"
+          />
+          <ActionCard
+            icon="list"
+            accentIndex={0}
+            title={t.home.chooseClass}
+            subtitle={t.home.chooseClassSubtitle}
+            onPress={() => setPickerVisible(true)}
+            className="flex-1 basis-[45%]"
+          />
+          <ActionCard
+            icon="history"
+            accentIndex={2}
+            title={t.home.historyButton}
+            subtitle={t.home.historySubtitle}
+            onPress={() => router.push("/history")}
+            className="flex-1 basis-[45%]"
+          />
+          <ActionCard
+            icon="calendar-view-week"
+            accentIndex={3}
+            title={t.home.timetable}
+            subtitle={t.home.timetableSubtitle}
+            onPress={() => router.push("/timetable")}
+            className="flex-1 basis-[45%]"
+          />
         </View>
 
-        <View className="mt-md flex-row items-center justify-between">
+        <View className="mt-lg flex-row items-center justify-between">
           <AppText
             weight="medium"
             className="text-on-surface-variant text-xs uppercase tracking-wider"
@@ -219,45 +190,25 @@ export default function HomePage() {
 
         {sessionsForSelectedDate.length > 0 ? (
           <View className="mt-sm gap-sm">
-            {sessionsForSelectedDate.map((session) => {
+            {sessionsForSelectedDate.map((session, index) => {
               const presentCount = Object.values(session.attendance).filter(
                 (a) => a.present,
               ).length;
+              const codeMatch = session.className.match(/\d+|[A-Za-z]/g) ?? [];
+              const code = codeMatch.slice(0, 2).join("").toUpperCase() || session.className.slice(0, 2).toUpperCase();
               return (
-                <Pressable
+                <SessionRow
                   key={session.id}
+                  code={code}
+                  accentIndex={index}
+                  title={session.className}
+                  subtitle={t.common.presentCount(presentCount)}
+                  right={session.submittedAt ? { type: "check" } : { type: "button", label: t.home.resume }}
                   onPress={() => {
                     setActiveSession(session.id);
                     router.push("/register");
                   }}
-                  className="bg-surface-container-lowest border border-outline-variant rounded-xl p-sm flex-row items-center justify-between active:opacity-80"
-                >
-                  <View className="flex-row items-center gap-sm flex-1">
-                    <View className="w-12 h-12 rounded-[999px] bg-secondary-container items-center justify-center">
-                      <MaterialIcons
-                        name="assignment"
-                        size={22}
-                        color={colors.onSecondaryContainer}
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <AppText weight="bold" className="text-on-surface">
-                        {session.className}
-                      </AppText>
-                      <AppText className="text-sm text-on-surface-variant">
-                        {subjects.find(
-                          (sub) => sub.code === session.subjectCode,
-                        )?.label ?? session.subjectCode}{" "}
-                        · {t.common.presentCount(presentCount)}
-                      </AppText>
-                    </View>
-                  </View>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color={colors.onSurfaceVariant}
-                  />
-                </Pressable>
+                />
               );
             })}
           </View>
@@ -270,28 +221,6 @@ export default function HomePage() {
             </AppText>
           </View>
         )}
-
-        <View className="mt-lg gap-sm">
-          <View className="flex-row gap-sm">
-            <PrimaryButton
-              label={t.home.scanClass}
-              icon="qr-code-scanner"
-              onPress={() => router.push("/class-scanner")}
-              className="flex-1"
-            />
-            <OutlineButton
-              label={t.home.chooseClass}
-              icon="list"
-              onPress={() => setPickerVisible(true)}
-              className="flex-1"
-            />
-          </View>
-          <OutlineButton
-            label={t.home.historyButton}
-            icon="history"
-            onPress={() => router.push("/history")}
-          />
-        </View>
 
         <Pressable
           onPress={() => {
@@ -353,16 +282,6 @@ export default function HomePage() {
           </Pressable>
         </Pressable>
       </Modal>
-
-      <SubjectPickerModal
-        visible={subjectPickerVisible}
-        subjects={subjects}
-        onSelect={handleSelectSubject}
-        onClose={() => {
-          setSubjectPickerVisible(false);
-          setPendingClass(null);
-        }}
-      />
     </View>
   );
 }

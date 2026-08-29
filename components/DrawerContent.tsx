@@ -20,7 +20,9 @@ function NavItem({ icon, label, onPress }: NavItemProps) {
     <Pressable
       onPress={onPress}
       className="flex-row items-center gap-sm px-container-margin py-3 active:bg-surface-container">
-      <MaterialIcons name={icon} size={22} color={colors.onSurfaceVariant} />
+      <View className="w-10 h-10 rounded-full bg-surface-container items-center justify-center">
+        <MaterialIcons name={icon} size={20} color={colors.onSurfaceVariant} />
+      </View>
       <AppText weight="medium" className="text-base text-on-surface">
         {label}
       </AppText>
@@ -34,7 +36,7 @@ export function DrawerContent(props: DrawerContentComponentProps) {
   const authUser = useAppStore((s) => s.authUser);
   const logout = useAppStore((s) => s.logout);
 
-  const go = (path: '/home' | '/history' | '/profile') => {
+  const go = (path: '/home' | '/history' | '/timetable' | '/profile') => {
     props.navigation.closeDrawer();
     router.push(path);
   };
@@ -49,7 +51,7 @@ export function DrawerContent(props: DrawerContentComponentProps) {
     <DrawerContentScrollView {...props} contentContainerClassName="flex-1 bg-surface" scrollEnabled={false}>
       <View className="flex-1">
         <View className="flex-row items-center gap-sm px-container-margin pt-md pb-lg border-b border-outline-variant">
-          <View className="w-12 h-12 rounded-[999px] overflow-hidden border border-outline-variant bg-surface-container">
+          <View className="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
             <Image source={{ uri: avatarUriFor(authUser?.name ?? '') }} className="w-full h-full" />
           </View>
           <View className="flex-1">
@@ -64,6 +66,7 @@ export function DrawerContent(props: DrawerContentComponentProps) {
 
         <View className="mt-sm">
           <NavItem icon="home" label={t.drawer.home} onPress={() => go('/home')} />
+          <NavItem icon="calendar-view-week" label={t.drawer.timetable} onPress={() => go('/timetable')} />
           <NavItem icon="history" label={t.drawer.history} onPress={() => go('/history')} />
           <NavItem icon="person" label={t.drawer.profile} onPress={() => go('/profile')} />
         </View>

@@ -1,137 +1,120 @@
 import { View, Image, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
-import { colors } from '../theme/tokens';
+import { accentFor } from '../theme/tokens';
 import { useTranslation } from '../lib/i18n/useTranslation';
 import type { RosterStudent } from '../data/classes';
 
-const studentIdFor = (id: number) => `SC-2024-88${String(id).padStart(2, '0')}`;
-
-type RowProps = {
+type StudentRowProps = {
   student: RosterStudent;
-  grade: string;
+  classId: string;
+  sessionId: string;
+  present: boolean;
+  time?: string;
+  onToggle: () => void;
 };
 
-export function PresentStudentRow({ student, grade, time }: RowProps & { time?: string }) {
+export function StudentRow({ student, classId, sessionId, present, time, onToggle }: StudentRowProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const accent = accentFor(student.color);
 
-  const openIdCard = () =>
+  const openStudent = () =>
     router.push({
-      pathname: '/id-card',
-      params: {
-        name: student.name,
-        grade,
-        studentId: studentIdFor(student.id),
-        qrToken: student.qrToken,
-        ...(student.img ? { img: student.img } : { initials: student.initials, color: student.color }),
-      },
+      pathname: '/student',
+      params: { studentId: String(student.id), classId, sessionId },
     });
 
   return (
     <Pressable
-      onPress={openIdCard}
-      className="bg-surface-container-lowest rounded-xl p-sm flex-row items-center justify-between border border-outline-variant/30 active:opacity-80">
-      <View className="flex-row items-center gap-sm">
+      onPress={openStudent}
+      className={`${present ? student.color : 'bg-surface-container-low'} rounded-lg p-sm flex-row items-center justify-between active:opacity-80`}>
+      <View className="flex-row items-center gap-sm flex-1">
         {student.img ? (
-          <View className="w-12 h-12 rounded-[999px] overflow-hidden border border-outline-variant/50">
+          <View className="w-12 h-12 rounded-full overflow-hidden bg-white">
             <Image source={{ uri: student.img }} className="w-full h-full" />
           </View>
         ) : (
-          <View className={`w-12 h-12 rounded-[999px] ${student.color} items-center justify-center`}>
-            <AppText weight="bold" className="text-xl">
+          <View className="w-12 h-12 rounded-full bg-white items-center justify-center">
+            <AppText weight="bold" className={`text-xl ${present ? accent.onText : 'text-outline'}`}>
               {student.initials}
             </AppText>
           </View>
         )}
-        <View>
-          <AppText weight="bold" className="text-on-surface">
+        <View className="flex-1">
+          <AppText weight="bold" className={present ? 'text-on-surface' : 'text-on-surface-variant'} numberOfLines={1}>
             {student.name}
           </AppText>
-          <AppText className="text-sm text-on-surface-variant">{t.studentListItem.arrivedAt(time ?? '')}</AppText>
+          <AppText className="text-sm text-on-surface-variant" numberOfLines={1}>
+            {present ? t.studentListItem.arrivedAt(time ?? '') : t.studentListItem.tapToMarkPresent}
+          </AppText>
         </View>
       </View>
-      <View className="w-8 h-8 rounded-[999px] bg-[#E8F5E9] items-center justify-center">
-        <MaterialIcons name="check-circle" size={20} color="#2E7D32" />
-      </View>
+      <Pressable
+        onPress={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        accessibilityLabel={present ? t.studentListItem.markWaitingLabel : t.studentListItem.markPresentLabel}
+        className="w-8 h-8 rounded-full bg-white items-center justify-center">
+        <AppText weight="bold" className={present ? accent.onText : 'text-outline'}>
+          {present ? '✓' : '+'}
+        </AppText>
+      </Pressable>
     </Pressable>
   );
 }
 
-export function AbsentStudentRow({
-  student,
-  grade,
-  isAbsent,
-  onMarkPresent,
-  onMarkAbsent,
-}: RowProps & { isAbsent?: boolean; onMarkPresent?: () => void; onMarkAbsent?: () => void }) {
+// Read-only variant for historical/submitted records — no mark toggle, since
+// past attendance shouldn't be edited from a list row.
+type StaticStudentRowProps = {
+  student: RosterStudent;
+  classId: string;
+  present: boolean;
+  time?: string;
+};
+
+export function StaticStudentRow({ student, classId, present, time }: StaticStudentRowProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const accent = accentFor(student.color);
 
-  const openIdCard = () =>
+  const openStudent = () =>
     router.push({
-      pathname: '/id-card',
-      params: {
-        name: student.name,
-        grade,
-        studentId: studentIdFor(student.id),
-        qrToken: student.qrToken,
-        ...(student.img ? { img: student.img } : { initials: student.initials, color: student.color }),
-      },
+      pathname: '/student',
+      params: { studentId: String(student.id), classId },
     });
 
   return (
     <Pressable
-      onPress={openIdCard}
-      className="bg-surface-container-lowest rounded-xl p-sm flex-row items-center justify-between border border-outline-variant/30 active:opacity-80">
-      <View className="flex-row items-center gap-sm">
+      onPress={openStudent}
+      className={`${present ? student.color : 'bg-surface-container-low'} rounded-lg p-sm flex-row items-center justify-between active:opacity-80`}>
+      <View className="flex-row items-center gap-sm flex-1">
         {student.img ? (
-          <View className="w-12 h-12 rounded-[999px] overflow-hidden border border-outline-variant/50">
+          <View className="w-12 h-12 rounded-full overflow-hidden bg-white">
             <Image source={{ uri: student.img }} className="w-full h-full" />
           </View>
         ) : (
-          <View className={`w-12 h-12 rounded-[999px] ${student.color} items-center justify-center`}>
-            <AppText weight="bold" className="text-xl">
+          <View className="w-12 h-12 rounded-full bg-white items-center justify-center">
+            <AppText weight="bold" className={`text-xl ${present ? accent.onText : 'text-outline'}`}>
               {student.initials}
             </AppText>
           </View>
         )}
-        <View>
-          <AppText weight="bold" className="text-on-surface">
+        <View className="flex-1">
+          <AppText weight="bold" className={present ? 'text-on-surface' : 'text-on-surface-variant'} numberOfLines={1}>
             {student.name}
           </AppText>
-          <AppText className="text-sm text-error">
-            {isAbsent ? t.studentListItem.markedAbsent : t.studentListItem.notCounted}
+          <AppText className="text-sm text-on-surface-variant" numberOfLines={1}>
+            {present ? t.studentListItem.arrivedAt(time ?? '') : t.historyDetail.absent}
           </AppText>
         </View>
       </View>
-      {(onMarkPresent || onMarkAbsent) && (
-        <View className="flex-row gap-2">
-          {onMarkPresent && (
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                onMarkPresent();
-              }}
-              accessibilityLabel={t.studentListItem.markPresentLabel}
-              className="w-9 h-9 items-center justify-center border border-outline-variant rounded-lg active:bg-surface-container">
-              <MaterialIcons name="check" size={18} color={colors.onSurface} />
-            </Pressable>
-          )}
-          {onMarkAbsent && (
-            <Pressable
-              onPress={(e) => {
-                e.stopPropagation();
-                onMarkAbsent();
-              }}
-              accessibilityLabel={t.studentListItem.markAbsentLabel}
-              className={`w-9 h-9 items-center justify-center border rounded-lg active:bg-error-container ${
-                isAbsent ? 'bg-error-container border-error' : 'border-outline-variant'
-              }`}>
-              <MaterialIcons name="close" size={18} color={isAbsent ? colors.onErrorContainer : colors.error} />
-            </Pressable>
-          )}
+      {present && (
+        <View className="w-8 h-8 rounded-full bg-white items-center justify-center">
+          <AppText weight="bold" className={accent.onText}>
+            ✓
+          </AppText>
         </View>
       )}
     </Pressable>

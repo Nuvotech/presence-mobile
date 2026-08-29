@@ -1,4 +1,7 @@
 import { api, clearToken, setToken } from "./api";
+import { USE_MOCK_DATA } from "./mockConfig";
+import { MOCK_TEACHERS } from "./mock/data";
+import { mockDelay } from "./mock/delay";
 
 export type AuthUser = {
   id: number;
@@ -25,10 +28,24 @@ export class AuthError extends Error {
   }
 }
 
+let mockCurrentUser: AuthUser | null = null;
+
 export async function login(
   email: string,
   password: string,
 ): Promise<AuthUser> {
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    const teacher = MOCK_TEACHERS.find(
+      (t) => t.email.toLowerCase() === email.trim().toLowerCase() && t.password === password,
+    );
+    if (!teacher) {
+      throw new AuthError("invalid_credentials");
+    }
+    mockCurrentUser = teacher.user;
+    return teacher.user;
+  }
+
   try {
     const response = await api.post<
       ApiEnvelope<{ token: string; user: AuthUser }>
@@ -45,12 +62,22 @@ export async function login(
 }
 
 export async function fetchMe(): Promise<AuthUser> {
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    return mockCurrentUser ?? MOCK_TEACHERS[0].user;
+  }
+
   const response =
     await api.get<ApiEnvelope<AuthUser>>("/me");
   return response.data.data;
 }
 
 export async function logout(): Promise<void> {
+  if (USE_MOCK_DATA) {
+    mockCurrentUser = null;
+    return;
+  }
+
   try {
     await api.post("/logout");
   } finally {

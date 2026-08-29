@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { AppText } from '../../components/AppText';
-import { colors } from '../../theme/tokens';
+import { colors, PASTEL_ACCENTS } from '../../theme/tokens';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../lib/i18n/useTranslation';
 import { avatarUriFor } from '../../lib/avatar';
@@ -21,7 +21,7 @@ export default function ProfilePage() {
       <Header title={t.profile.headerTitle} backButton />
       <ScrollView contentContainerClassName="px-container-margin pt-lg pb-24" keyboardShouldPersistTaps="handled">
         <View className="items-center">
-          <View className="w-28 h-28 rounded-[999px] overflow-hidden border border-outline-variant bg-surface-container mb-sm">
+          <View className="w-28 h-28 rounded-full overflow-hidden bg-surface-container mb-sm">
             <Image source={{ uri: avatarUriFor(authUser?.name ?? '') }} className="w-full h-full" />
           </View>
           <AppText weight="bold" className="text-2xl text-on-surface">
@@ -36,14 +36,14 @@ export default function ProfilePage() {
         </View>
 
         <View className="mt-lg flex-row gap-sm">
-          <View className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl p-sm items-center">
-            <AppText weight="bold" className="text-2xl text-on-surface">
+          <View className={`flex-1 ${PASTEL_ACCENTS[0].bg} rounded-xl p-md items-center`}>
+            <AppText weight="extrabold" className={`text-3xl ${PASTEL_ACCENTS[0].onText}`}>
               {sessions.length}
             </AppText>
             <AppText className="text-xs text-on-surface-variant text-center mt-1">{t.profile.sessionsRecorded}</AppText>
           </View>
-          <View className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl p-sm items-center">
-            <AppText weight="bold" className="text-2xl text-on-surface">
+          <View className={`flex-1 ${PASTEL_ACCENTS[1].bg} rounded-xl p-md items-center`}>
+            <AppText weight="extrabold" className={`text-3xl ${PASTEL_ACCENTS[1].onText}`}>
               {classesCovered}
             </AppText>
             <AppText className="text-xs text-on-surface-variant text-center mt-1">{t.profile.classesCovered}</AppText>
@@ -52,7 +52,7 @@ export default function ProfilePage() {
 
         <Pressable
           onPress={() => router.push('/history')}
-          className="mt-md bg-surface-container-lowest border border-outline-variant rounded-xl p-sm flex-row items-center justify-between active:opacity-80">
+          className="mt-md p-sm flex-row items-center justify-between active:opacity-70">
           <View className="flex-row items-center gap-sm">
             <MaterialIcons name="history" size={22} color={colors.onSurfaceVariant} />
             <AppText weight="bold" className="text-on-surface">

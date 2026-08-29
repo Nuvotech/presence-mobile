@@ -1,5 +1,9 @@
 import { api } from "./api";
 import type { RosterStudent } from "../data/classes";
+import { AVATAR_COLORS, initialsFor } from "./avatar";
+import { USE_MOCK_DATA } from "./mockConfig";
+import { MOCK_STUDENTS } from "./mock/data";
+import { mockDelay } from "./mock/delay";
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -17,24 +21,16 @@ type ApiStudent = {
   photo_url: string | null;
 };
 
-const AVATAR_COLORS = [
-  "bg-secondary-container",
-  "bg-tertiary-fixed",
-  "bg-secondary-fixed-dim",
-  "bg-error-container",
-];
-
-const initialsFor = (name: string) =>
-  name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join("");
+export const studentIdFor = (id: number) => `SC-2024-88${String(id).padStart(2, "0")}`;
 
 export async function fetchStudentsForClass(
   classId: string,
 ): Promise<RosterStudent[]> {
+  if (USE_MOCK_DATA) {
+    await mockDelay();
+    return MOCK_STUDENTS[classId] ?? [];
+  }
+
   const response = await api.get<ApiEnvelope<ApiStudent[]>>(
     `/classes/${classId}/students`,
   );
@@ -46,5 +42,7 @@ export async function fetchStudentsForClass(
     color: AVATAR_COLORS[index % AVATAR_COLORS.length],
     img: student.photo_url ?? undefined,
     qrToken: student.qr_token,
+    guardianName: student.guardian_name || undefined,
+    guardianContact: student.guardian_whatsapp || undefined,
   }));
 }
