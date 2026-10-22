@@ -1,5 +1,6 @@
 import { api } from "./api";
 import type { RosterStudent } from "../data/classes";
+import { AVATAR_COLORS, initialsFor } from "./avatar";
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -17,20 +18,7 @@ type ApiStudent = {
   photo_url: string | null;
 };
 
-const AVATAR_COLORS = [
-  "bg-secondary-container",
-  "bg-tertiary-fixed",
-  "bg-secondary-fixed-dim",
-  "bg-error-container",
-];
-
-const initialsFor = (name: string) =>
-  name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]!.toUpperCase())
-    .join("");
+export const studentIdFor = (id: number) => `SC-2024-88${String(id).padStart(2, "0")}`;
 
 export async function fetchStudentsForClass(
   classId: string,
@@ -46,5 +34,7 @@ export async function fetchStudentsForClass(
     color: AVATAR_COLORS[index % AVATAR_COLORS.length],
     img: student.photo_url ?? undefined,
     qrToken: student.qr_token,
+    guardianName: student.guardian_name || undefined,
+    guardianContact: student.guardian_whatsapp || undefined,
   }));
 }

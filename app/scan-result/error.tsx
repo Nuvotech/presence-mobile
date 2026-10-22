@@ -12,6 +12,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { AppText } from '../../components/AppText';
+import { colors } from '../../theme/tokens';
 import { useTranslation } from '../../lib/i18n/useTranslation';
 
 export default function ErrorFeedback() {
@@ -33,7 +34,7 @@ export default function ErrorFeedback() {
   const bounceStyle = useAnimatedStyle(() => ({ transform: [{ translateY: bounce.value }] }));
 
   return (
-    <SafeAreaView className="flex-1 bg-[#ef4444] items-center justify-center px-container-margin">
+    <SafeAreaView className="flex-1 bg-error items-center justify-center px-container-margin">
       <Animated.View style={bounceStyle} className="mb-8">
         <MaterialIcons name="cancel" size={120} color="#ffffff" />
       </Animated.View>
@@ -48,8 +49,8 @@ export default function ErrorFeedback() {
         <Pressable
           onPress={() => router.replace('/scanner')}
           className="w-full h-14 bg-white rounded-xl flex-row items-center justify-center gap-2 active:opacity-90">
-          <MaterialIcons name="arrow-back" size={20} color="#ef4444" />
-          <AppText weight="bold" className="text-[#ef4444]">
+          <MaterialIcons name="arrow-back" size={20} color={colors.error} />
+          <AppText weight="bold" className="text-error">
             {t.scanResult.errorRetry}
           </AppText>
         </Pressable>

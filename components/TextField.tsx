@@ -16,7 +16,7 @@ export function TextField({ label, icon, className = '', ...props }: TextFieldPr
       </AppText>
       <View className="relative justify-center">
         <TextInput
-          className={`h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest font-hanken text-on-surface ${icon ? 'pr-10' : ''} ${className}`}
+          className={`h-12 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest font-archivo text-on-surface ${icon ? 'pr-10' : ''} ${className}`}
           placeholderTextColor={colors.outline}
           {...props}
         />

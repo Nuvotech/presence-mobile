@@ -8,22 +8,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
-  HankenGrotesk_400Regular,
-  HankenGrotesk_500Medium,
-  HankenGrotesk_600SemiBold,
-  HankenGrotesk_700Bold,
-  HankenGrotesk_800ExtraBold,
-} from '@expo-google-fonts/hanken-grotesk';
+  Archivo_400Regular,
+  Archivo_500Medium,
+  Archivo_600SemiBold,
+  Archivo_700Bold,
+  Archivo_800ExtraBold,
+} from '@expo-google-fonts/archivo';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontsError] = useFonts({
-    HankenGrotesk_400Regular,
-    HankenGrotesk_500Medium,
-    HankenGrotesk_600SemiBold,
-    HankenGrotesk_700Bold,
-    HankenGrotesk_800ExtraBold,
+    Archivo_400Regular,
+    Archivo_500Medium,
+    Archivo_600SemiBold,
+    Archivo_700Bold,
+    Archivo_800ExtraBold,
   });
   const ready = fontsLoaded || !!fontsError;
 
@@ -53,6 +53,10 @@ export default function RootLayout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="login" />
             <Stack.Screen name="(drawer)" />
+            <Stack.Screen
+              name="register-submitted"
+              options={{ presentation: 'fullScreenModal', animation: 'fade' }}
+            />
             <Stack.Screen
               name="scan-result/success"
               options={{ presentation: 'fullScreenModal', animation: 'fade' }}

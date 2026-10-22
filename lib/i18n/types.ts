@@ -12,17 +12,19 @@ export type TranslationDictionary = {
   drawer: {
     home: string;
     history: string;
+    timetable: string;
     profile: string;
     logout: string;
   };
   login: {
-    wordmark: string;
     subtitle: string;
+    tagline: string;
     emailLabel: string;
     emailPlaceholder: string;
     passwordLabel: string;
+    showPassword: string;
+    hidePassword: string;
     submit: string;
-    forgotPassword: string;
     genericError: string;
     invalidCredentialsError: string;
     networkError: string;
@@ -34,10 +36,18 @@ export type TranslationDictionary = {
     noSessionsOnDate: string;
     selectDateLabel: string;
     scanClass: string;
+    scanClassSubtitle: string;
     chooseClass: string;
+    chooseClassSubtitle: string;
     historyButton: string;
+    historySubtitle: string;
+    timetable: string;
+    timetableSubtitle: string;
+    resume: string;
     selectClassModalTitle: string;
     noClassesAvailable: string;
+    greeting: (name: string) => string;
+    classesCount: (count: number) => string;
   };
   profile: {
     headerTitle: string;
@@ -51,7 +61,8 @@ export type TranslationDictionary = {
     backToHome: string;
     attendanceSheet: string;
     presentTab: (count: number) => string;
-    absentTab: (count: number) => string;
+    waitingTab: (count: number) => string;
+    presentOfTotal: (total: number) => string;
     searchPlaceholder: string;
     loadingStudents: string;
     submitSuccessTitle: string;
@@ -62,6 +73,14 @@ export type TranslationDictionary = {
     submitting: string;
     submittedUpdate: string;
     submitRegister: string;
+    submittedHeadline: string;
+    submittedSummary: (className: string, dateLabel: string, present: number, absent: number) => string;
+    markedBy: string;
+    submittedAtLabel: string;
+    nextClassLabel: string;
+    noMoreClassesToday: string;
+    editAction: string;
+    doneAction: string;
   };
   registerStudent: {
     headerTitle: string;
@@ -76,11 +95,15 @@ export type TranslationDictionary = {
   };
   classScanner: {
     headerTitle: string;
+    headline: string;
     scanErrorMessage: string;
     scanHint: string;
   };
   scanner: {
     headerTitle: string;
+    scanningClass: (className: string) => string;
+    holdSteady: string;
+    holdSteadySubtitle: string;
     scanHint: string;
     studentsScannedCount: (count: number) => string;
     scannedToday: string;
@@ -121,16 +144,42 @@ export type TranslationDictionary = {
     errorRetry: string;
     errorIgnore: string;
   };
+  studentListItem: {
+    arrivedAt: (time: string) => string;
+    tapToMarkPresent: string;
+    markPresentLabel: string;
+    markWaitingLabel: string;
+    markedAbsent: string;
+    markAbsentLabel: string;
+  };
   subjectPicker: {
     title: string;
     subtitle: string;
   };
-  studentListItem: {
-    arrivedAt: (time: string) => string;
-    markedAbsent: string;
-    notCounted: string;
-    markPresentLabel: string;
-    markAbsentLabel: string;
+  timetable: {
+    headerTitle: string;
+    today: string;
+    tomorrow: string;
+    previousMonth: string;
+    nextMonth: string;
+    classCount: (count: number) => string;
+    noClassesScheduled: string;
+  };
+  student: {
+    headerTitle: string;
+    markPresent: string;
+    markWaiting: string;
+    idCard: string;
+    attendanceRate: string;
+    sessionsRecorded: string;
+    lastSessions: string;
+    noSessionsYet: string;
+    guardian: string;
+    noGuardianInfo: string;
+    reportAbsence: string;
+    reportAbsenceSubtitle: string;
+    reportAbsenceConfirmTitle: string;
+    reportAbsenceConfirmMessage: (name: string) => string;
   };
 };
 

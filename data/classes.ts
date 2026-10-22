@@ -5,6 +5,8 @@ export type RosterStudent = {
   color: string;
   img?: string;
   qrToken: string;
+  guardianName?: string;
+  guardianContact?: string;
 };
 
 export type ClassInfo = {

@@ -3,11 +3,11 @@ import { Text, type TextProps } from 'react-native';
 type Weight = 'regular' | 'medium' | 'semibold' | 'bold' | 'extrabold';
 
 const weightClass: Record<Weight, string> = {
-  regular: 'font-hanken',
-  medium: 'font-hanken-medium',
-  semibold: 'font-hanken-semibold',
-  bold: 'font-hanken-bold',
-  extrabold: 'font-hanken-extrabold',
+  regular: 'font-archivo',
+  medium: 'font-archivo-medium',
+  semibold: 'font-archivo-semibold',
+  bold: 'font-archivo-bold',
+  extrabold: 'font-archivo-extrabold',
 };
 
 type AppTextProps = TextProps & {

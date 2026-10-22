@@ -1,16 +1,18 @@
-import { useState } from "react";
-import { View, Pressable, KeyboardAvoidingView, Platform } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Image,
+  Pressable,
+  ScrollView,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
 import { AppText } from "../components/AppText";
+import { PrimaryButton } from "../components/Buttons";
 import { TextField } from "../components/TextField";
 import { colors } from "../theme/tokens";
 import { logoUri } from "../data/students";
@@ -24,21 +26,32 @@ export default function LoginPage() {
   const setAuthUser = useAppStore((s) => s.setAuthUser);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const spin = useSharedValue(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  const spinnerStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${spin.value}deg` }],
-  }));
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setIsKeyboardVisible(true),
+    );
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setIsKeyboardVisible(false),
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleLogin = async () => {
     setError(null);
     setIsLoading(true);
-    spin.value = withRepeat(
-      withTiming(360, { duration: 800, easing: Easing.linear }),
-      -1,
-    );
 
     try {
       await apiLogin(email.trim(), password);
@@ -57,7 +70,6 @@ export default function LoginPage() {
         setError(t.login.genericError);
       }
     } finally {
-      spin.value = 0;
       setIsLoading(false);
     }
   };
@@ -65,76 +77,89 @@ export default function LoginPage() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 items-center justify-center px-container-margin"
+        behavior="padding"
+        className="flex-1"
       >
-        <View className="w-full max-w-[400px] bg-surface-container-lowest border border-surface-variant rounded-xl p-lg items-center">
-          <View className="items-center mb-xl">
-            <Animated.Image
-              source={{ uri: logoUri }}
-              className="h-16 w-16 mb-4"
-            />
-            <AppText
-              weight="bold"
-              className="text-2xl text-primary tracking-tight"
-            >
-              {t.login.wordmark}
-            </AppText>
-            <AppText className="text-base text-on-surface-variant mt-1">
+        <ScrollView
+          contentContainerClassName="flex-grow justify-center px-container-margin py-lg"
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
+        >
+          <Image
+            source={logoUri}
+            className={`self-center ${isKeyboardVisible ? "h-20" : "h-56"}`}
+            style={{ aspectRatio: 508 / 670 }}
+            resizeMode="contain"
+          />
+
+          <View className="mt-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+            <AppText weight="extrabold" className="text-xl text-on-surface">
               {t.login.subtitle}
             </AppText>
-          </View>
+            <AppText className="text-sm text-on-surface-variant mt-1">
+              {t.login.tagline}
+            </AppText>
 
-          <View className="w-full gap-md">
-            <TextField
-              label={t.login.emailLabel}
-              icon="mail"
-              placeholder={t.login.emailPlaceholder}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            <TextField
-              label={t.login.passwordLabel}
-              icon="lock"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+            <View className="gap-4 mt-6">
+              <TextField
+                label={t.login.emailLabel}
+                placeholder={t.login.emailPlaceholder}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                returnKeyType="next"
+              />
 
-            {error && (
-              <AppText className="text-sm text-error">{error}</AppText>
-            )}
-
-            <Pressable
-              onPress={handleLogin}
-              disabled={isLoading}
-              className="w-full h-12 bg-primary rounded-lg items-center justify-center flex-row active:opacity-90"
-            >
-              {isLoading ? (
-                <Animated.View style={spinnerStyle}>
+              <View className="relative">
+                <TextField
+                  label={t.login.passwordLabel}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                  returnKeyType="go"
+                  onSubmitEditing={handleLogin}
+                  className="pr-12"
+                />
+                <Pressable
+                  onPress={() => setShowPassword((v) => !v)}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showPassword ? t.login.hidePassword : t.login.showPassword
+                  }
+                  hitSlop={8}
+                  className="absolute right-0 bottom-0 h-12 w-12 items-center justify-center"
+                >
                   <MaterialIcons
-                    name="sync"
-                    size={22}
-                    color={colors.onPrimary}
+                    name={showPassword ? "visibility-off" : "visibility"}
+                    size={20}
+                    color={colors.outline}
                   />
-                </Animated.View>
-              ) : (
-                <AppText weight="bold" className="text-on-primary text-base">
-                  {t.login.submit}
-                </AppText>
-              )}
-            </Pressable>
-          </View>
+                </Pressable>
+              </View>
 
-          <AppText
-            weight="medium"
-            className="mt-lg text-sm text-on-surface-variant underline"
-          >
-            {t.login.forgotPassword}
-          </AppText>
-        </View>
+              {error && (
+                <View className="flex-row items-center gap-2 rounded-lg bg-error-container px-3 py-2.5">
+                  <MaterialIcons
+                    name="error-outline"
+                    size={18}
+                    color={colors.error}
+                  />
+                  <AppText className="flex-1 text-sm text-error">{error}</AppText>
+                </View>
+              )}
+
+              <PrimaryButton
+                label={t.login.submit}
+                onPress={handleLogin}
+                loading={isLoading}
+                className="w-full mt-2"
+              />
+            </View>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

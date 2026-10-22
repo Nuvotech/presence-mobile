@@ -1,8 +1,9 @@
-import { View, Pressable, ScrollView } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Header } from '../../components/Header';
 import { AppText } from '../../components/AppText';
+import { SessionRow } from '../../components/SessionRow';
 import { colors } from '../../theme/tokens';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../lib/i18n/useTranslation';
@@ -13,9 +14,9 @@ export default function HistoryPage() {
   const { t } = useTranslation();
   const sessions = useAppStore((s) => s.sessions);
   const studentsByClass = useAppStore((s) => s.studentsByClass);
-  const subjects = useAppStore((s) => s.subjects);
   const setActiveSession = useAppStore((s) => s.setActiveSession);
   const fetchStudentsForClass = useAppStore((s) => s.fetchStudentsForClass);
+  const subjects = useAppStore((s) => s.subjects);
   const sorted = [...sessions].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
@@ -31,14 +32,22 @@ export default function HistoryPage() {
           </View>
         )}
 
-        {sorted.map((session) => {
+        {sorted.map((session, index) => {
           const total = studentsByClass[session.classId]?.length ?? 0;
           const present = Object.values(session.attendance).filter((a) => a.present).length;
           const today = isToday(session.date);
+          const codeMatch = session.className.match(/\d+|[A-Za-z]/g) ?? [];
+          const code = codeMatch.slice(0, 2).join('').toUpperCase() || session.className.slice(0, 2).toUpperCase();
 
           return (
-            <Pressable
+            <SessionRow
               key={session.id}
+              code={code}
+              accentIndex={index}
+              title={session.className}
+              subtitle={`${formatDisplayDate(session.date)} · ${subjects.find((sub) => sub.code === session.subjectCode)?.label ?? session.subjectCode} · ${present}/${total} ${t.common.presentSuffix}`}
+              badgeLabel={today ? t.history.today : undefined}
+              right={{ type: 'chevron' }}
               onPress={() => {
                 if (today) {
                   setActiveSession(session.id);
@@ -48,33 +57,7 @@ export default function HistoryPage() {
                   router.push({ pathname: '/history/[id]', params: { id: session.id } });
                 }
               }}
-              className="bg-surface-container-lowest border border-outline-variant rounded-xl p-sm flex-row items-center justify-between active:opacity-80">
-              <View className="flex-row items-center gap-sm flex-1">
-                <View className="w-12 h-12 rounded-[999px] bg-secondary-container items-center justify-center">
-                  <MaterialIcons name="assignment" size={22} color={colors.onSecondaryContainer} />
-                </View>
-                <View className="flex-1">
-                  <View className="flex-row items-center gap-2">
-                    <AppText weight="bold" className="text-on-surface">
-                      {session.className}
-                    </AppText>
-                    {today && (
-                      <View className="px-2 py-0.5 bg-primary rounded">
-                        <AppText weight="bold" className="text-[10px] text-on-primary">
-                          {t.history.today}
-                        </AppText>
-                      </View>
-                    )}
-                  </View>
-                  <AppText className="text-sm text-on-surface-variant">
-                    {formatDisplayDate(session.date)} ·{' '}
-                    {subjects.find((sub) => sub.code === session.subjectCode)?.label ?? session.subjectCode} ·{' '}
-                    {present}/{total} {t.common.presentSuffix}
-                  </AppText>
-                </View>
-              </View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.onSurfaceVariant} />
-            </Pressable>
+            />
           );
         })}
       </ScrollView>

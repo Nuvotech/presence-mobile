@@ -1,28 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import { MaterialIcons } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
-import { Header } from '../../components/Header';
 import { AppText } from '../../components/AppText';
+import { ScanFrame } from '../../components/ScanFrame';
 import { SubjectPickerModal } from '../../components/SubjectPickerModal';
-import { colors } from '../../theme/tokens';
 import type { ClassInfo } from '../../data/classes';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../lib/i18n/useTranslation';
 
-const FRAME_SIZE = 256;
-
 export default function ClassScannerPage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const activeSubjectCode = useAppStore((s) => s.activeSubjectCode);
   const setActiveSubject = useAppStore((s) => s.setActiveSubject);
@@ -35,21 +27,12 @@ export default function ClassScannerPage() {
   const [pendingClass, setPendingClass] = useState<ClassInfo | null>(null);
   const [subjectPickerVisible, setSubjectPickerVisible] = useState(false);
   const [scanError, setScanError] = useState(false);
-  const scanLineY = useSharedValue(0);
   const busyRef = useRef(false);
 
   useEffect(() => {
     fetchClasses();
     fetchSubjects();
   }, [fetchClasses, fetchSubjects]);
-
-  const scanLineStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: scanLineY.value }],
-  }));
-
-  useEffect(() => {
-    scanLineY.value = withRepeat(withTiming(FRAME_SIZE, { duration: 2000, easing: Easing.linear }), -1, false);
-  }, [scanLineY]);
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
@@ -114,55 +97,51 @@ export default function ClassScannerPage() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <Header title={t.classScanner.headerTitle} backButton />
-      <View className="flex-1 bg-black items-center justify-center relative overflow-hidden">
-        {permission?.granted ? (
-          <CameraView
-            style={{ position: 'absolute', inset: 0 }}
-            facing="back"
-            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            onBarcodeScanned={handleBarcodeScanned}
-          />
-        ) : (
-          <View className="absolute inset-0 bg-[#0a0a0a] items-center justify-center opacity-60">
-            <MaterialIcons name="qr-code-scanner" size={140} color={colors.surfaceVariant} />
-          </View>
-        )}
+    <View className="flex-1 bg-primary relative overflow-hidden">
+      {permission?.granted && (
+        <CameraView
+          style={{ position: 'absolute', inset: 0 }}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+          onBarcodeScanned={handleBarcodeScanned}
+        />
+      )}
 
-        {!permission?.granted && (
-          <View className="absolute inset-0 items-center justify-center px-container-margin" pointerEvents="box-none">
-            <Pressable
-              onPress={requestPermission}
-              className="bg-white/10 px-4 py-3 rounded-xl">
-              <AppText className="text-white text-sm text-center">
-                {permission && !permission.canAskAgain
-                  ? t.common.cameraDeniedMessage
-                  : t.common.cameraPromptMessage}
-              </AppText>
-            </Pressable>
-          </View>
-        )}
+      <View style={{ paddingTop: insets.top }} className="px-container-margin pt-sm pb-2 flex-row items-center gap-sm">
+        <Pressable
+          onPress={() => router.back()}
+          className="w-9 h-9 rounded-full bg-white/15 items-center justify-center">
+          <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
+        </Pressable>
+        <AppText weight="extrabold" className="text-lg text-white flex-1" numberOfLines={1}>
+          {t.classScanner.headerTitle}
+        </AppText>
+      </View>
 
-        <View className="w-64 h-64 relative z-10 rounded-lg overflow-hidden" style={{ borderWidth: 2, borderColor: 'white' }}>
-          <Animated.View
-            className="h-0.5 bg-white absolute w-full left-0 top-0"
-            style={[scanLineStyle, { shadowColor: '#fff', shadowOpacity: 1, shadowRadius: 10 }]}
-          />
-          <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white" />
-          <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white" />
-          <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white" />
-          <View className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white" />
-        </View>
+      <View className="flex-1 items-center justify-center gap-md px-container-margin">
+        <ScanFrame />
 
-        <View className="absolute bottom-12 self-center z-20 px-container-margin">
-          <AppText
-            weight="medium"
-            className={`text-sm text-white py-2 px-4 rounded-full overflow-hidden ${scanError ? 'bg-error' : 'bg-black/40'}`}>
+        <View className="items-center gap-1 mt-2">
+          <AppText weight="extrabold" className="text-lg text-white">
+            {t.classScanner.headline}
+          </AppText>
+          <AppText className="text-sm text-white/60 text-center" style={{ maxWidth: 250 }}>
             {scanError ? t.classScanner.scanErrorMessage : t.classScanner.scanHint}
           </AppText>
         </View>
+
+        {!permission?.granted && (
+          <Pressable onPress={requestPermission} className="bg-white/10 px-4 py-3 rounded-xl mt-2">
+            <AppText className="text-white text-sm text-center">
+              {permission && !permission.canAskAgain
+                ? t.common.cameraDeniedMessage
+                : t.common.cameraPromptMessage}
+            </AppText>
+          </Pressable>
+        )}
       </View>
+
+      <View style={{ height: insets.bottom + 24 }} />
 
       <SubjectPickerModal
         visible={subjectPickerVisible}

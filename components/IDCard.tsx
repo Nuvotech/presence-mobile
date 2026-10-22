@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { AppText } from "./AppText";
-import { colors } from "../theme/tokens";
+import { colors, accentFor } from "../theme/tokens";
 import { useTranslation } from "../lib/i18n/useTranslation";
 
 const QR_SIZE = 168;
@@ -33,6 +33,7 @@ export function IDCard({
   color = "bg-secondary-container",
 }: IDCardProps) {
   const { t } = useTranslation();
+  const accent = accentFor(color);
   const rotateX = useSharedValue(0);
   const rotateY = useSharedValue(0);
 
@@ -58,15 +59,15 @@ export function IDCard({
     <GestureDetector gesture={panGesture}>
       <Animated.View
         style={cardAnimatedStyle}
-        className="w-[300px] bg-white rounded-2xl border border-surface-variant overflow-hidden"
+        className="w-[300px] bg-white rounded-xl overflow-hidden"
       >
         <View className="flex-row items-center gap-sm px-sm pt-sm pb-2">
-          <View className="w-11 h-11 rounded-[999px] overflow-hidden border border-outline-variant/50 bg-surface-container-low items-center justify-center">
+          <View className="w-11 h-11 rounded-full overflow-hidden bg-surface-container-low items-center justify-center">
             {photoUri ? (
               <Image source={{ uri: photoUri }} className="w-full h-full" />
             ) : (
               <View className={`w-full h-full items-center justify-center ${color}`}>
-                <AppText weight="bold" className="text-base">
+                <AppText weight="bold" className={`text-base ${accent.onText}`}>
                   {initials}
                 </AppText>
               </View>
