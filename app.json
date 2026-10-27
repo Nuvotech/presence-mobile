@@ -3,11 +3,10 @@
     "name": "Present",
     "slug": "present",
     "version": "1.0.0",
-    "scheme": "Present",
+    "scheme": "present",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -16,7 +15,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
@@ -52,7 +50,6 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-community/datetimepicker",
       [
         "expo-notifications",
         {

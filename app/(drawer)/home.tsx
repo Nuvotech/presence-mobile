@@ -10,10 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import DateTimePicker, {
-  DateTimePickerAndroid,
-  type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import DateTimePicker from "@expo/ui/community/datetime-picker";
 import { Header } from "../../components/Header";
 import { AppText } from "../../components/AppText";
 import { ActionCard } from "../../components/ActionCard";
@@ -95,25 +92,14 @@ export default function HomePage() {
     }
   };
 
-  const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
+  const handleDateChange = (_event: unknown, date: Date) => {
     setShowDatePicker(false);
-    if (event.type === "set" && date) {
-      setSelectedDate(date.toISOString().slice(0, 10));
-    }
+    setSelectedDate(date.toISOString().slice(0, 10));
   };
 
-  const openDatePicker = () => {
-    const value = new Date(`${selectedDate}T00:00:00`);
-    if (Platform.OS === "android") {
-      DateTimePickerAndroid.open({
-        value,
-        mode: "date",
-        onChange: handleDateChange,
-      });
-    } else {
-      setShowDatePicker(true);
-    }
-  };
+  // iOS renders the picker inline below the header row; on Android mounting
+  // it opens a dialog, which is unmounted again on pick or dismiss.
+  const openDatePicker = () => setShowDatePicker(true);
 
   const subjectLabelFor = (code: string) =>
     subjects.find((sub) => sub.code === code)?.label ?? code;
@@ -209,12 +195,14 @@ export default function HomePage() {
           </View>
         </View>
 
-        {Platform.OS === "ios" && showDatePicker && (
+        {showDatePicker && (
           <DateTimePicker
             value={new Date(`${selectedDate}T00:00:00`)}
             mode="date"
-            display="inline"
-            onChange={handleDateChange}
+            display={Platform.OS === "ios" ? "inline" : "default"}
+            presentation="dialog"
+            onValueChange={handleDateChange}
+            onDismiss={() => setShowDatePicker(false)}
           />
         )}
 

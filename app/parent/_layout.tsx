@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
-import * as Notifications from 'expo-notifications';
 import { api, clearToken } from '../../lib/api';
 import { fetchNotifications, registerPushToken } from '../../lib/parent';
-import { getExpoPushToken } from '../../lib/push';
+import { getExpoPushToken, subscribeToPushEvents } from '../../lib/push';
 import { useAppStore } from '../../store/useAppStore';
 
 export default function ParentLayout() {
@@ -50,15 +49,10 @@ export default function ParentLayout() {
         .then((page) => setParentUnreadCount(page.unreadCount))
         .catch(() => {});
 
-    const received = Notifications.addNotificationReceivedListener(refreshUnread);
-    const tapped = Notifications.addNotificationResponseReceivedListener(() => {
-      router.push('/parent/notifications');
+    return subscribeToPushEvents({
+      onReceived: refreshUnread,
+      onTapped: () => router.push('/parent/notifications'),
     });
-
-    return () => {
-      received.remove();
-      tapped.remove();
-    };
   }, [canUseApp, router, setParentUnreadCount]);
 
   return <Stack screenOptions={{ headerShown: false }} />;

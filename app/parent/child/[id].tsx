@@ -122,7 +122,7 @@ export default function ParentChildPage() {
               <AppText className="text-sm text-on-surface-variant text-center">{t.parent.noRecords}</AppText>
             </View>
           }
-          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} className="my-sm" /> : null}
+          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} className="my-sm" /> : undefined}
           renderItem={({ item }) => {
             const present = item.status === 'present';
             return (

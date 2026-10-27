@@ -92,7 +92,7 @@ export default function ParentNotificationsPage() {
               <AppText className="text-sm text-on-surface-variant text-center">{t.parent.noNotifications}</AppText>
             </View>
           }
-          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} className="my-sm" /> : null}
+          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} className="my-sm" /> : undefined}
           renderItem={({ item }) => (
             <View className="flex-row gap-sm py-sm border-b border-outline-variant">
               <View className={`w-2 h-2 rounded-full mt-1.5 ${item.read_at ? 'bg-transparent' : 'bg-accent'}`} />

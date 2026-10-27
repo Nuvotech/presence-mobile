@@ -1,6 +1,6 @@
 import { View, Pressable, Image } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import type { DrawerNavigationProp } from 'expo-router/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
