@@ -18,13 +18,20 @@ import { colors } from "../theme/tokens";
 import { logoUri } from "../data/students";
 import { useAppStore } from "../store/useAppStore";
 import { useTranslation } from "../lib/i18n/useTranslation";
+import { SegmentedControl } from "../components/SegmentedControl";
 import { AuthError, fetchMe, login as apiLogin } from "../lib/auth";
+import { parentLogin } from "../lib/parent";
+
+type LoginMode = "staff" | "parent";
 
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const setAuthUser = useAppStore((s) => s.setAuthUser);
+  const setParentGuardian = useAppStore((s) => s.setParentGuardian);
+  const [mode, setMode] = useState<LoginMode>("staff");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +61,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      if (mode === "parent") {
+        const guardian = await parentLogin(phone.trim(), password);
+        setParentGuardian(guardian);
+
+        router.replace(
+          guardian.must_change_password ? "/parent/password" : "/parent/home",
+        );
+        return;
+      }
+
       await apiLogin(email.trim(), password);
       const authUser = await fetchMe();
       setAuthUser(authUser);
@@ -92,25 +109,50 @@ export default function LoginPage() {
             resizeMode="contain"
           />
 
-          <View className="mt-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+          <SegmentedControl<LoginMode>
+            segments={[
+              { key: "staff", label: t.login.staffMode },
+              { key: "parent", label: t.login.parentMode },
+            ]}
+            value={mode}
+            onChange={(next) => {
+              setMode(next);
+              setError(null);
+            }}
+            className="mt-6"
+          />
+
+          <View className="mt-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
             <AppText weight="extrabold" className="text-xl text-on-surface">
-              {t.login.subtitle}
+              {mode === "parent" ? t.login.parentSubtitle : t.login.subtitle}
             </AppText>
             <AppText className="text-sm text-on-surface-variant mt-1">
-              {t.login.tagline}
+              {mode === "parent" ? t.login.parentTagline : t.login.tagline}
             </AppText>
 
             <View className="gap-4 mt-6">
-              <TextField
-                label={t.login.emailLabel}
-                placeholder={t.login.emailPlaceholder}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                returnKeyType="next"
-              />
+              {mode === "parent" ? (
+                <TextField
+                  label={t.login.phoneLabel}
+                  placeholder={t.login.phonePlaceholder}
+                  value={phone}
+                  onChangeText={setPhone}
+                  autoComplete="tel"
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                />
+              ) : (
+                <TextField
+                  label={t.login.emailLabel}
+                  placeholder={t.login.emailPlaceholder}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  returnKeyType="next"
+                />
+              )}
 
               <View className="relative">
                 <TextField

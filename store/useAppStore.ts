@@ -5,6 +5,7 @@ import type { ClassInfo, RosterStudent } from "../data/classes";
 import type { Subject } from "../data/subjects";
 import { todayStr } from "../lib/date";
 import type { AuthUser } from "../lib/auth";
+import type { Guardian } from "../lib/parent";
 import { fetchClasses as fetchClassesRequest } from "../lib/classes";
 import { fetchStudentsForClass as fetchStudentsForClassRequest } from "../lib/students";
 import { fetchMySubjects } from "../lib/subjects";
@@ -30,6 +31,12 @@ export type ClassSession = {
 
 type AppState = {
   authUser: AuthUser | null;
+  parentGuardian: Guardian | null;
+  parentPushToken: string | null;
+  parentUnreadCount: number;
+  setParentGuardian: (guardian: Guardian | null) => void;
+  setParentPushToken: (token: string | null) => void;
+  setParentUnreadCount: (count: number) => void;
   activeSubjectCode: string | null;
   activeSessionId: string | null;
   language: Language;
@@ -74,6 +81,8 @@ export const useAppStore = create<AppState>()(
       AppState,
       | "sessions"
       | "authUser"
+      | "parentGuardian"
+      | "parentPushToken"
       | "activeSubjectCode"
       | "activeSessionId"
       | "studentsByClass"
@@ -82,6 +91,9 @@ export const useAppStore = create<AppState>()(
   >(
     (set, get) => ({
       authUser: null,
+      parentGuardian: null,
+      parentPushToken: null,
+      parentUnreadCount: 0,
       activeSubjectCode: null,
       activeSessionId: null,
       language: "fr",
@@ -102,6 +114,13 @@ export const useAppStore = create<AppState>()(
       },
 
       setAuthUser: (authUser) => set({ authUser }),
+
+      setParentGuardian: (parentGuardian) =>
+        set(parentGuardian ? { parentGuardian } : { parentGuardian, parentUnreadCount: 0 }),
+
+      setParentPushToken: (parentPushToken) => set({ parentPushToken }),
+
+      setParentUnreadCount: (parentUnreadCount) => set({ parentUnreadCount }),
 
       setActiveSubject: (code) => set({ activeSubjectCode: code }),
 
@@ -296,6 +315,8 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         sessions: state.sessions,
         authUser: state.authUser,
+        parentGuardian: state.parentGuardian,
+        parentPushToken: state.parentPushToken,
         activeSubjectCode: state.activeSubjectCode,
         activeSessionId: state.activeSessionId,
         studentsByClass: state.studentsByClass,

@@ -52,7 +52,14 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "color": "#2A2438",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "extra": {
       "router": {},
