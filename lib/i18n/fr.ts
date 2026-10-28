@@ -186,8 +186,40 @@ const fr: TranslationDictionary = {
     duplicateStatusValue: 'DOUBLON',
     duplicateScanNext: 'SCANNER SUIVANT',
     duplicateForce: 'FORCER',
-    errorTitle: 'Carte non reconnue.',
-    errorSubtitle: 'Veuillez vérifier la carte ou contacter le bureau.',
+    errors: {
+      invalid_card: {
+        title: 'Carte non reconnue.',
+        subtitle: "Cette carte n'est pas valide pour cette école. Demandez au bureau d'en imprimer une nouvelle.",
+      },
+      wrong_class: {
+        title: "Pas dans cette classe.",
+        subtitle: 'Cet élève appartient à une autre classe. Vérifiez que vous avez scanné la bonne classe.',
+      },
+      session_unavailable: {
+        title: 'Séance non démarrée.',
+        subtitle: "La séance du jour pour cette classe n'a pas pu être ouverte. Vérifiez votre connexion et réessayez.",
+      },
+      session_other_teacher: {
+        title: 'Séance ouverte par un autre compte.',
+        subtitle: "Un autre enseignant a ouvert la séance du jour pour cette classe et cette matière. Seul lui ou un administrateur peut y scanner.",
+      },
+      session_missing: {
+        title: 'Séance introuvable.',
+        subtitle: "Cette séance n'existe plus sur le serveur. Déconnectez-vous, reconnectez-vous et scannez à nouveau la classe.",
+      },
+      signed_out: {
+        title: 'Session expirée.',
+        subtitle: 'Votre connexion a expiré. Reconnectez-vous pour continuer à scanner.',
+      },
+      offline: {
+        title: 'Pas de connexion.',
+        subtitle: "Le serveur est injoignable. Vérifiez votre connexion internet et réessayez.",
+      },
+      server_error: {
+        title: 'Une erreur est survenue.',
+        subtitle: "Le serveur n'a pas pu enregistrer ce scan. Réessayez ou marquez l'élève depuis le registre.",
+      },
+    },
     errorRetry: 'Réessayer',
     errorIgnore: 'Ignorer',
   },

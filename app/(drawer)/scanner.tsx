@@ -10,7 +10,7 @@ import { ScanFrame } from '../../components/ScanFrame';
 import { colors } from '../../theme/tokens';
 import { useAppStore } from '../../store/useAppStore';
 import { useTranslation } from '../../lib/i18n/useTranslation';
-import { scanStudent } from '../../lib/sessions';
+import { scanFailureReason, scanStudent, type ScanFailureReason } from '../../lib/sessions';
 
 const formatTime = (iso: string | null) =>
   new Date(iso ?? Date.now()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -52,17 +52,20 @@ export default function ScannerPage() {
       if (busyRef.current || !session) return;
       busyRef.current = true;
 
+      const showError = (reason: ScanFailureReason) =>
+        router.push({ pathname: '/scan-result/error', params: { reason } });
+
       try {
         const remoteId = await ensureSessionOpen(session.id);
         if (remoteId === null) {
-          router.push('/scan-result/error');
+          showError('session_unavailable');
           return;
         }
 
         const result = await scanStudent(remoteId, data);
 
         if (result.status === 'not_found' || !result.student) {
-          router.push('/scan-result/error');
+          showError(result.reason ?? 'invalid_card');
           return;
         }
 
@@ -81,8 +84,8 @@ export default function ScannerPage() {
           pathname: '/scan-result/success',
           params: { name: result.student.name, grade: classInfo?.name ?? '', time },
         });
-      } catch {
-        router.push('/scan-result/error');
+      } catch (error) {
+        showError(scanFailureReason(error));
       }
     },
     [session, classInfo, ensureSessionOpen, markStudentPresent, router]

@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ClassInfo, RosterStudent } from "../data/classes";
 import type { Subject } from "../data/subjects";
 import { todayStr } from "../lib/date";
+import { baseURL } from "../lib/api";
 import type { AuthUser } from "../lib/auth";
 import type { Guardian } from "../lib/parent";
 import { fetchClasses as fetchClassesRequest } from "../lib/classes";
@@ -29,8 +30,13 @@ export type ClassSession = {
   submittedAt: string | null;
 };
 
+// Which server + account the cached rosters and sessions came from. Their ids
+// only mean something on that server, for that teacher.
+const cacheOwnerFor = (authUser: AuthUser) => `${baseURL}#${authUser.id}`;
+
 type AppState = {
   authUser: AuthUser | null;
+  cacheOwner: string | null;
   parentGuardian: Guardian | null;
   parentPushToken: string | null;
   parentUnreadCount: number;
@@ -81,6 +87,7 @@ export const useAppStore = create<AppState>()(
       AppState,
       | "sessions"
       | "authUser"
+      | "cacheOwner"
       | "parentGuardian"
       | "parentPushToken"
       | "activeSubjectCode"
@@ -91,6 +98,7 @@ export const useAppStore = create<AppState>()(
   >(
     (set, get) => ({
       authUser: null,
+      cacheOwner: null,
       parentGuardian: null,
       parentPushToken: null,
       parentUnreadCount: 0,
@@ -113,7 +121,31 @@ export const useAppStore = create<AppState>()(
         return session?.date === todayStr() ? session : undefined;
       },
 
-      setAuthUser: (authUser) => set({ authUser }),
+      setAuthUser: (authUser) => {
+        if (!authUser) {
+          set({ authUser });
+          return;
+        }
+
+        const cacheOwner = cacheOwnerFor(authUser);
+        if (cacheOwner === get().cacheOwner) {
+          set({ authUser });
+          return;
+        }
+
+        // A different account or server: the cached session and student ids
+        // belong to another database, so submitting them would be rejected.
+        set({
+          authUser,
+          cacheOwner,
+          sessions: [],
+          studentsByClass: {},
+          classes: [],
+          subjects: [],
+          activeSessionId: null,
+          activeSubjectCode: null,
+        });
+      },
 
       setParentGuardian: (parentGuardian) =>
         set(parentGuardian ? { parentGuardian } : { parentGuardian, parentUnreadCount: 0 }),
@@ -315,6 +347,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         sessions: state.sessions,
         authUser: state.authUser,
+        cacheOwner: state.cacheOwner,
         parentGuardian: state.parentGuardian,
         parentPushToken: state.parentPushToken,
         activeSubjectCode: state.activeSubjectCode,

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { api } from "./api";
 
 type ApiEnvelope<T> = {
@@ -58,9 +59,38 @@ export type ScanRecord = {
 
 export type ScanResult = {
   status: "success" | "duplicate" | "not_found";
+  reason: "invalid_card" | "wrong_class" | null;
   student: ScanStudent | null;
   record: ScanRecord | null;
 };
+
+/** Why a student scan failed — each one gets its own message on the error screen. */
+export type ScanFailureReason =
+  | "invalid_card"
+  | "wrong_class"
+  | "session_unavailable"
+  | "session_other_teacher"
+  | "session_missing"
+  | "signed_out"
+  | "offline"
+  | "server_error";
+
+/** Map a failed scan request to the reason shown to the teacher. */
+export function scanFailureReason(error: unknown): ScanFailureReason {
+  if (!axios.isAxiosError(error)) return "server_error";
+  if (!error.response) return "offline";
+
+  switch (error.response.status) {
+    case 401:
+      return "signed_out";
+    case 403:
+      return "session_other_teacher";
+    case 404:
+      return "session_missing";
+    default:
+      return "server_error";
+  }
+}
 
 export async function scanStudent(
   sessionId: number,

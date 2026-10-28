@@ -1,3 +1,5 @@
+import type { ScanFailureReason } from '../sessions';
+
 export type TranslationDictionary = {
   common: {
     appTitle: string;
@@ -182,8 +184,7 @@ export type TranslationDictionary = {
     duplicateStatusValue: string;
     duplicateScanNext: string;
     duplicateForce: string;
-    errorTitle: string;
-    errorSubtitle: string;
+    errors: Record<ScanFailureReason, { title: string; subtitle: string }>;
     errorRetry: string;
     errorIgnore: string;
   };

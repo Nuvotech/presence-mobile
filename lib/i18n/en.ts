@@ -186,8 +186,40 @@ const en: TranslationDictionary = {
     duplicateStatusValue: 'DUPLICATE',
     duplicateScanNext: 'SCAN NEXT',
     duplicateForce: 'FORCE',
-    errorTitle: 'Card not recognized.',
-    errorSubtitle: 'Please check the card or contact the office.',
+    errors: {
+      invalid_card: {
+        title: 'Card not recognized.',
+        subtitle: 'This card is not valid for this school. Ask the office to print a new one.',
+      },
+      wrong_class: {
+        title: 'Not in this class.',
+        subtitle: 'This student belongs to another class. Check that you scanned the right class.',
+      },
+      session_unavailable: {
+        title: 'Session not started.',
+        subtitle: "Today's session for this class could not be opened. Check your connection and try again.",
+      },
+      session_other_teacher: {
+        title: 'Session opened by someone else.',
+        subtitle: "Another teacher opened today's session for this class and subject. Only they or an admin can scan into it.",
+      },
+      session_missing: {
+        title: 'Session not found.',
+        subtitle: 'This class session no longer exists on the server. Log out, log in and scan the class again.',
+      },
+      signed_out: {
+        title: 'Signed out.',
+        subtitle: 'Your login has expired. Log in again to continue scanning.',
+      },
+      offline: {
+        title: 'No connection.',
+        subtitle: 'The server could not be reached. Check your internet connection and try again.',
+      },
+      server_error: {
+        title: 'Something went wrong.',
+        subtitle: 'The server could not record this scan. Try again, or mark the student from the register.',
+      },
+    },
     errorRetry: 'Retry',
     errorIgnore: 'Ignore',
   },

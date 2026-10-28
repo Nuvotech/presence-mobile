@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 
 const TOKEN_KEY = "present_auth_token";
 
-const baseURL =
+export const baseURL =
   process.env.EXPO_PUBLIC_API_URL ?? "https://school.nuvotech.co.za/api/v1";
 
 export const api = axios.create({

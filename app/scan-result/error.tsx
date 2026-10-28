@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
@@ -14,10 +14,25 @@ import Animated, {
 import { AppText } from '../../components/AppText';
 import { colors } from '../../theme/tokens';
 import { useTranslation } from '../../lib/i18n/useTranslation';
+import type { ScanFailureReason } from '../../lib/sessions';
+
+const FAILURE_REASONS: ScanFailureReason[] = [
+  'invalid_card',
+  'wrong_class',
+  'session_unavailable',
+  'session_other_teacher',
+  'session_missing',
+  'signed_out',
+  'offline',
+  'server_error',
+];
 
 export default function ErrorFeedback() {
   const router = useRouter();
   const { t } = useTranslation();
+  const params = useLocalSearchParams<{ reason?: string }>();
+  const reason = FAILURE_REASONS.find((r) => r === params.reason) ?? 'invalid_card';
+  const message = t.scanResult.errors[reason];
   const bounce = useSharedValue(0);
 
   useEffect(() => {
@@ -39,10 +54,10 @@ export default function ErrorFeedback() {
         <MaterialIcons name="cancel" size={120} color="#ffffff" />
       </Animated.View>
       <AppText weight="bold" className="text-[32px] text-white mb-2 text-center">
-        {t.scanResult.errorTitle}
+        {message.title}
       </AppText>
       <AppText className="text-lg text-white/90 mb-12 text-center">
-        {t.scanResult.errorSubtitle}
+        {message.subtitle}
       </AppText>
 
       <View className="w-full max-w-xs gap-4">
